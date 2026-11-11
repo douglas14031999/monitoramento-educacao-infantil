@@ -1179,11 +1179,11 @@ function aResumo() {
   const indList = D.inds.map((n, i) => {
     const x = st.pr[n.id];
     const s = x[0] + x[1] + x[2];
-    return { num: i + 1, text: n.text, x, s, pSim: pct(x[0], s), pParc: pct(x[1], s), pNao: pct(x[2], s) };
+    return { num: i + 1, text: n.text, x, s, pSim: pct(x[0], s) };
   }).filter(item => item.s > 0);
 
-  const fortes = [...indList].sort((x, y) => y.pSim - x.pSim).slice(0, 2);
-  const atencao = [...indList].sort((x, y) => (y.pParc + y.pNao) - (x.pParc + x.pNao)).slice(0, 2);
+  const fortes = [...indList].sort((x, y) => y.pSim - x.pSim).slice(0, 3);
+  const atencao = [...indList].sort((x, y) => x.pSim - y.pSim).slice(0, 3);
 
   const porEtapa = D.levels.map(l => {
     const clEta = cl.filter(c => c.lid == l.id);
@@ -1200,124 +1200,134 @@ function aResumo() {
   }).filter(x => x.turmasTotal > 0).sort((x, y) => y.simPct - x.simPct);
 
   return (D.schools.length === 0 ? `<div class="card" style="border:2px dashed var(--g);background:var(--gs);text-align:center;padding:24px;margin-bottom:20px"><h3 style="margin:0 0 6px">🎉 Planilha conectada com sucesso!</h3><p style="margin:0 0 16px;color:var(--ink)">Ainda não há escolas ou turmas gravadas na sua planilha. Deseja inserir dados de teste para testar o sistema agora?</p><button class="btn" onclick="carregarExemplo(this)">⚡ Inserir dados de teste na planilha</button></div>` : "") +
-  `<div class="noprint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-    <span style="font-size:.85rem;color:var(--mut);font-weight:600">Ano Letivo: <b>${esc(yname(yr()))}</b></span>
-    <div style="display:flex;gap:8px">
-      <button class="ghost" style="height:36px;padding:0 14px;font-size:.85rem" onclick="imprimirRelatorio()">🖨️ Imprimir / Salvar PDF</button>
-      <button class="ghost" style="height:36px;padding:0 14px;font-size:.85rem" onclick="exportarCSV()">📥 Exportar Planilha (CSV)</button>
-    </div>
-  </div>
-  <div class="kpis">
+  `<div class="kpis">
     <div class="kpi a"><b>${D.schools.length}</b><small>Escolas</small></div>
     <div class="kpi b"><b>${yCl(yr()).length}</b><small>Turmas no ano</small></div>
     <div class="kpi c"><b>${st.f}/${cl.length}</b><small>Turmas preenchidas</small></div>
     <div class="kpi d"><b>${pct(st.t[0], tot)}%</b><small>Respostas “Sim”</small></div>
   </div>
   <div class="card noprint">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <h3 style="margin:0">Filtros de análise</h3>
+      <div style="display:flex;gap:8px">
+        <button class="ghost" style="height:34px;padding:0 12px;font-size:.82rem" onclick="imprimirRelatorio()">Imprimir relatório</button>
+        <button class="ghost" style="height:34px;padding:0 12px;font-size:.82rem" onclick="exportarCSV()">Exportar CSV</button>
+      </div>
+    </div>
     <div class="grid">
       <div><label>Período</label><select onchange="go({fp:this.value})"><option value="">Todos os períodos</option>${yPer(yr()).map(p => `<option value="${p.id}" ${S.fp == p.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></div>
       <div><label>Escola</label><select onchange="go({fs:this.value})"><option value="">Todas as escolas</option>${D.schools.map(s => `<option value="${s.id}" ${S.fs == s.id ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select></div>
       <div><label>Etapa</label><select onchange="go({fl:this.value})"><option value="">Todas as etapas</option>${D.levels.map(l => `<option value="${l.id}" ${S.fl == l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></div>
     </div>
-  </div>` +
-  (tot ? `<div class="highlights">
-    <div class="hl-card good">
-      <h4>🌟 Pontos Fortes da Rede (Maior desenvolvimento)</h4>
-      ${fortes.map(f => `<div class="hl-item"><span><b>${f.num}.</b> ${esc(f.text)}</span><span class="badge" style="margin:0;flex:none">${f.pSim}% Sim</span></div>`).join("") || '<small style="color:var(--mut)">Sem dados suficientes.</small>'}
-    </div>
-    <div class="hl-card alert">
-      <h4>⚠️ Alerta Pedagógico (Atenção prioritária)</h4>
-      ${atencao.map(a => `<div class="hl-item"><span><b>${a.num}.</b> ${esc(a.text)}</span><span class="badge w" style="margin:0;flex:none">${a.pParc + a.pNao}% Parcial/Não</span></div>`).join("") || '<small style="color:var(--mut)">Sem dados suficientes.</small>'}
-    </div>
-  </div>` : "") +
-  `<div class="two">
+  </div>
+  <div class="two">
     <div class="card">
-      <h3>Visão geral da rede</h3>
+      <h3>Visão geral</h3>
       ${tot ? `
       <div class="donut" style="background:conic-gradient(var(--g) 0 ${a}%,var(--o) ${a}% ${b}%,var(--p) ${b}% 100%)">
-        <div>${a}%<span style="display:block;font-size:.7rem;font-weight:600;color:var(--mut)">Sim</span></div>
+        <div>${a}%</div>
       </div>
-      <div class="leg-box">
-        <div class="leg-item s"><b>${st.t[0]}</b><span>Sim (${pct(st.t[0], tot)}%)</span></div>
-        <div class="leg-item pa"><b>${st.t[1]}</b><span>Parcial (${pct(st.t[1], tot)}%)</span></div>
-        <div class="leg-item n"><b>${st.t[2]}</b><span>Não (${pct(st.t[2], tot)}%)</span></div>
-      </div>
-      <div style="text-align:center;margin-top:10px;font-size:.78rem;color:var(--mut)">Total: <b>${tot}</b> avaliações registradas</div>
+      ${LEG}
+      <p style="text-align:center;font-size:.82rem;color:var(--mut);margin:10px 0 0">Total: <b>${tot}</b> avaliações registradas</p>
       ` : `<p class="empty">Sem dados preenchidos</p>`}
     </div>
     <div class="card">
-      <div class="card-head">
-        <h3>Desenvolvimento por indicador (${D.inds.length})</h3>
-        ${LEG}
-      </div>
+      <h3>Desenvolvimento por indicador</h3>
       ${tot ? D.inds.map((n, i) => {
         const x = st.pr[n.id];
         const sTot = x[0] + x[1] + x[2];
-        return `<div class="irow" title="Sim: ${x[0]} · Parcial: ${x[1]} · Não: ${x[2]} (Total: ${sTot})">
-          <span style="line-height:1.2"><b>${i + 1}.</b> ${esc(n.text)}</span>
+        return `<div class="irow" title="Sim: ${x[0]} · Parcial: ${x[1]} · Não: ${x[2]}">
+          <span>${i + 1}. ${esc(n.text)}</span>
           ${bar(x)}
-          <b style="text-align:right">${pct(x[0], sTot)}%</b>
+          <b>${pct(x[0], sTot)}%</b>
         </div>`;
       }).join("") : '<p class="empty">Ainda não há preenchimentos para este filtro.</p>'}
     </div>
   </div>` +
+  (tot && fortes.length > 1 ? `
+  <div class="two">
+    <div class="card">
+      <h3>Maior desenvolvimento</h3>
+      ${fortes.map(f => `
+        <div class="irow" title="Sim: ${f.x[0]} · Parcial: ${f.x[1]} · Não: ${f.x[2]}">
+          <span>${f.num}. ${esc(f.text)}</span>
+          ${bar(f.x)}
+          <b>${f.pSim}%</b>
+        </div>
+      `).join("")}
+    </div>
+    <div class="card">
+      <h3>Atenção prioritária</h3>
+      ${atencao.map(a => `
+        <div class="irow" title="Sim: ${a.x[0]} · Parcial: ${a.x[1]} · Não: ${a.x[2]}">
+          <span>${a.num}. ${esc(a.text)}</span>
+          ${bar(a.x)}
+          <b style="color:var(--p)">${a.pSim}%</b>
+        </div>
+      `).join("")}
+    </div>
+  </div>` : "") +
   (porEtapa.length ? `
   <div class="card">
-    <div class="card-head">
-      <h3>📊 Comparativo por Etapa da Educação Infantil</h3>
-      <span style="font-size:.8rem;color:var(--mut)">Evolução da aprendizagem por faixa etária</span>
-    </div>
-    ${porEtapa.map(pe => {
-      return `<div class="rank-row">
-        <div class="rank-name">
-          <span>${esc(pe.level.name)}</span>
-          <small style="color:var(--mut);font-size:.75rem">(${pe.preenchidas}/${pe.turmasTotal} turmas)</small>
-        </div>
-        <div class="bar-wrap">
-          ${bar(pe.q.t)}
-          <div class="bar-sub"><span>Sim: ${pct(pe.q.t[0], pe.sTot)}%</span><span>Parcial: ${pct(pe.q.t[1], pe.sTot)}%</span><span>Não: ${pct(pe.q.t[2], pe.sTot)}%</span></div>
-        </div>
-        <b style="text-align:right;font-size:.95rem">${pe.simPct}%</b>
-      </div>`;
-    }).join("")}
-  </div>` : "") +
-  (porEscola.length ? `
-  <div class="card">
-    <div class="card-head">
-      <h3>🏫 Desempenho e Ranking por Escola</h3>
-      <span style="font-size:.8rem;color:var(--mut)">Classificação por índice de desenvolvimento</span>
-    </div>
-    ${porEscola.map(pe => {
-      const statusBadge = pe.simPct >= 75 ? '<span class="badge" style="margin:0">● Alto</span>' : (pe.simPct >= 50 ? '<span class="badge w" style="margin:0">● Regular</span>' : '<span class="badge x" style="margin:0">● Atenção</span>');
-      return `<div class="rank-row">
-        <div class="rank-name" title="${esc(pe.school.name)}">
-          <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(pe.school.name)}</span>
-          ${statusBadge}
-        </div>
-        <div class="bar-wrap">
-          ${bar(pe.q.t)}
-          <div class="bar-sub"><span>${pe.preenchidas}/${pe.turmasTotal} turmas preenchidas</span><span>${pe.simPct}% Sim</span></div>
-        </div>
-        <b style="text-align:right;font-size:.95rem">${pe.simPct}%</b>
-      </div>`;
-    }).join("")}
-  </div>` : "") +
-  `<div class="card">
-    <h3>Tabela consolidada por escola</h3>
+    <h3>Resultado por etapa</h3>
     <div class="tw">
       <table>
-        <tr><th>Escola</th><th>Turmas</th><th>Preenchidas</th><th style="min-width:180px">Distribuição (Sim · Parcial · Não)</th></tr>
-        ${D.schools.map(s => {
-          const c = D.classes.filter(x => x.yid == yr() && x.sid == s.id && (!S.fl || x.lid == S.fl));
-          const q = stats(c, S.fp);
-          return `<tr>
-            <td><b>${esc(s.name)}</b></td>
-            <td>${c.length}</td>
-            <td>${q.f}</td>
-            <td>${bar(q.t)}</td>
-          </tr>`;
-        }).join("")}
+        <thead>
+          <tr>
+            <th>Etapa</th>
+            <th>Turmas</th>
+            <th>Preenchidas</th>
+            <th style="min-width:180px">Sim · Parcial · Não</th>
+            <th style="text-align:right">% Sim</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${porEtapa.map(pe => `
+            <tr>
+              <td><b>${esc(pe.level.name)}</b></td>
+              <td>${pe.turmasTotal}</td>
+              <td>${pe.preenchidas}</td>
+              <td>${bar(pe.q.t)}</td>
+              <td style="text-align:right"><b>${pe.simPct}%</b></td>
+            </tr>
+          `).join("")}
+        </tbody>
       </table>
+    </div>
+  </div>` : "") +
+  `<div class="card">
+    <h3>Resultado por escola</h3>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th>Escola</th>
+            <th>Turmas</th>
+            <th>Preenchidas</th>
+            <th style="min-width:180px">Sim · Parcial · Não</th>
+            <th style="text-align:right">% Sim</th>
+            <th>Situação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${porEscola.map(pe => {
+            const statusBadge = pe.simPct >= 70
+              ? '<span class="badge" style="margin:0">Adequado</span>'
+              : (pe.simPct >= 50
+                ? '<span class="badge w" style="margin:0">Atenção</span>'
+                : '<span class="badge x" style="margin:0">Prioritário</span>');
+            return `<tr>
+              <td><b>${esc(pe.school.name)}</b></td>
+              <td>${pe.turmasTotal}</td>
+              <td>${pe.preenchidas}</td>
+              <td>${bar(pe.q.t)}</td>
+              <td style="text-align:right"><b>${pe.simPct}%</b></td>
+              <td>${statusBadge}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+      ${porEscola.length ? "" : '<p class="empty">Nenhuma escola com dados para este filtro.</p>'}
     </div>
   </div>`;
 }
