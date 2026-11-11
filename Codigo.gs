@@ -622,10 +622,28 @@ function carregarDadosDeExemplo() {
   garantirInicializacao_();
   const y = anoVigente_();
   if (!tbl_('schools').rows.length) {
+    const todasEtapas = tbl_('levels').rows.map(l => l.id);
     tbl_('schools').rows = [
-      { id: 'e1', name: 'Escola Municipal Maria das Dores', lids: ['l4', 'l5'] },
-      { id: 'e2', name: 'Creche Municipal Pequeno Cidadão', lids: ['l1', 'l2', 'l3', 'l4'] },
-      { id: 'e3', name: 'Escola Municipal Santa Luzia', lids: ['l4', 'l5'] }
+      { id: 'e1', name: 'ESCOLA DIVALDO SURUAGY', lids: todasEtapas },
+      { id: 'e2', name: 'ESCOLA DOM PEDRO I', lids: todasEtapas },
+      { id: 'e3', name: 'ESCOLA HERMETO PASCOAL', lids: todasEtapas },
+      { id: 'e4', name: 'ESCOLA JOSÉ MARQUES', lids: todasEtapas },
+      { id: 'e5', name: 'ESCOLA LUIZ EUSTÁQUIO', lids: todasEtapas },
+      { id: 'e6', name: 'ESCOLA MOACIR TEÓFILO', lids: todasEtapas },
+      { id: 'e7', name: 'ESCOLA JOSÉ BEZERRA LEITE', lids: todasEtapas },
+      { id: 'e8', name: 'ESCOLA GARRASTAZU', lids: todasEtapas },
+      { id: 'e9', name: 'ESCOLA JOÃO ANGELINO', lids: todasEtapas },
+      { id: 'e10', name: 'ESCOLA ULISSES LOPES', lids: todasEtapas },
+      { id: 'e11', name: 'ESCOLA N. SENHORA APARECIDA', lids: todasEtapas },
+      { id: 'e12', name: 'ESCOLA JOSÉ JOVINO', lids: todasEtapas },
+      { id: 'e13', name: 'ESCOLA JOSÉ FRANCISCO DE BRITO', lids: todasEtapas },
+      { id: 'e14', name: 'ESCOLA JOSÉ BERNARDES', lids: todasEtapas },
+      { id: 'e15', name: 'ESCOLA DOM PEDRO II', lids: todasEtapas },
+      { id: 'e16', name: 'ESCOLA MURILO ROCHA', lids: todasEtapas },
+      { id: 'e17', name: 'ESCOLA JOSÉ ROCHA', lids: todasEtapas },
+      { id: 'e18', name: 'CRECHE MENINO JESUS', lids: todasEtapas },
+      { id: 'e19', name: 'CRECHE JOSÉ CATÚ', lids: todasEtapas },
+      { id: 'e20', name: 'ESCOLA PEIXINHO DOURADO', lids: todasEtapas }
     ];
     sujar_('schools');
   }
