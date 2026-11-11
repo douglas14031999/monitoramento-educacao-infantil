@@ -1029,6 +1029,51 @@
       if (S.cid && !D.classes.some(c => c.id == S.cid)) S.cid = null;
       if (S.fp && !per(S.fp)) S.fp = ""; if (S.fs && !sch(S.fs)) S.fs = ""; if (S.fl && !D.levels.some(l => l.id == S.fl)) S.fl = "";
       try { localStorage.setItem(CK, JSON.stringify({ data: r.data, role: r.role, name: r.name })) } catch (e) { }
+      if (S.user && S.user.role == "admin") { setTimeout(garantirEscolasRede, 100); }
+    }
+    const ESCOLAS_CANOA = [
+      "ESCOLA DIVALDO SURUAGY",
+      "ESCOLA DOM PEDRO I",
+      "ESCOLA HERMETO PASCOAL",
+      "ESCOLA JOSÉ MARQUES",
+      "ESCOLA LUIZ EUSTÁQUIO",
+      "ESCOLA MOACIR TEÓFILO",
+      "ESCOLA JOSÉ BEZERRA LEITE",
+      "ESCOLA GARRASTAZU",
+      "ESCOLA JOÃO ANGELINO",
+      "ESCOLA ULISSES LOPES",
+      "ESCOLA N. SENHORA APARECIDA",
+      "ESCOLA JOSÉ JOVINO",
+      "ESCOLA JOSÉ FRANCISCO DE BRITO",
+      "ESCOLA JOSÉ BERNARDES",
+      "ESCOLA DOM PEDRO II",
+      "ESCOLA MURILO ROCHA",
+      "ESCOLA JOSÉ ROCHA",
+      "CRECHE MENINO JESUS",
+      "CRECHE JOSÉ CATÚ",
+      "ESCOLA PEIXINHO DOURADO"
+    ];
+    let _garantindo = false;
+    async function garantirEscolasRede() {
+      if (_garantindo || !S.user || S.user.role !== "admin" || !TOK) return;
+      if (!D.levels || !D.levels.length) return;
+      const allLids = D.levels.map(l => l.id);
+      const faltam = ESCOLAS_CANOA.filter(nome => !D.schools.some(s => (s.name || "").trim().toUpperCase() === nome.toUpperCase()));
+      if (!faltam.length) return;
+      _garantindo = true;
+      const ops = [];
+      faltam.forEach(nome => {
+        const s = { id: uid(), name: nome, lids: allLids };
+        D.schools.push(s);
+        ops.push(P("schools", s, 1));
+      });
+      D.schools.sort((a, b) => (a.name || "").localeCompare(b.name || "", "pt-BR"));
+      render();
+      try {
+        await commit(ops, true);
+      } finally {
+        _garantindo = false;
+      }
     }
     function entrar(r) {
       $("#msg").innerHTML = ""; S = S0(); adopt(r);
@@ -1223,8 +1268,7 @@ function aResumo() {
     return { school: s, turmasTotal: clEsc.length, preenchidas: q.f, q, sTot, simPct: pct(q.t[0], sTot) };
   }).filter(x => x.turmasTotal > 0).sort((x, y) => y.simPct - x.simPct);
 
-  return (D.schools.length === 0 ? `<div class="card" style="border:2px dashed var(--g);background:var(--gs);text-align:center;padding:24px;margin-bottom:20px"><h3 style="margin:0 0 6px">🎉 Planilha conectada com sucesso!</h3><p style="margin:0 0 16px;color:var(--ink)">Ainda não há escolas gravadas na sua planilha. Deseja cadastrar todas as 20 escolas municipais da rede agora?</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" onclick="cadastrarEscolasRede(this)">⚡ Cadastrar as 20 escolas da rede</button><button class="ghost" onclick="carregarExemplo(this)">Inserir dados de exemplo (teste)</button></div></div>` : "") +
-  `<div class="kpis">
+  return `<div class="kpis">
     <div class="kpi a"><b>${D.schools.length}</b><small>Escolas</small></div>
     <div class="kpi b"><b>${yCl(yr()).length}</b><small>Turmas no ano</small></div>
     <div class="kpi c"><b>${st.f}/${cl.length}</b><small>Turmas preenchidas</small></div>
@@ -1361,28 +1405,7 @@ function aResumo() {
 }
 const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin:14px 0 0">${b}</p></div>`;
     const chkL = (ids, cls) => D.levels.map(l => `<label><input type="checkbox" class="${cls}" value="${l.id}" ${ids.includes(l.id) ? "checked" : ""}>${esc(l.name)}</label>`).join("");
-        const ESCOLAS_CANOA = [
-      "ESCOLA DIVALDO SURUAGY",
-      "ESCOLA DOM PEDRO I",
-      "ESCOLA HERMETO PASCOAL",
-      "ESCOLA JOSÉ MARQUES",
-      "ESCOLA LUIZ EUSTÁQUIO",
-      "ESCOLA MOACIR TEÓFILO",
-      "ESCOLA JOSÉ BEZERRA LEITE",
-      "ESCOLA GARRASTAZU",
-      "ESCOLA JOÃO ANGELINO",
-      "ESCOLA ULISSES LOPES",
-      "ESCOLA N. SENHORA APARECIDA",
-      "ESCOLA JOSÉ JOVINO",
-      "ESCOLA JOSÉ FRANCISCO DE BRITO",
-      "ESCOLA JOSÉ BERNARDES",
-      "ESCOLA DOM PEDRO II",
-      "ESCOLA MURILO ROCHA",
-      "ESCOLA JOSÉ ROCHA",
-      "CRECHE MENINO JESUS",
-      "CRECHE JOSÉ CATÚ",
-      "ESCOLA PEIXINHO DOURADO"
-    ];
+        
     async function cadastrarEscolasRede(btn) {
       if (btn) { btn.disabled = true; btn.textContent = "Gravando na planilha…"; }
       const allLids = D.levels.length ? D.levels.map(l => l.id) : ["l1", "l2", "l3", "l4", "l5"];
@@ -1398,6 +1421,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
         }
       });
       if (ops.length) {
+        D.schools.sort((a, b) => (a.name || "").localeCompare(b.name || "", "pt-BR"));
         await commit(ops, true);
       }
       if (btn) { btn.disabled = false; btn.textContent = "⚡ Cadastrar escolas da rede"; }
@@ -1431,7 +1455,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
     function aPeriodos() { return addBox("Abrir novo período", `<label>Nome do período</label><input id="pn" placeholder="Ex.: 3º Bimestre, 1º Semestre…">`, `<button class="btn" onclick="addPeriodo()">Cadastrar período</button>`) + `<div class="card"><h3>Períodos · ${esc(yname(yr()))}</h3><p style="color:var(--mut);margin:-6px 0 8px;font-size:.9rem">Períodos <b>abertos</b> aparecem automaticamente para os coordenadores preencherem.</p>${yPer(yr()).map(p => `<div class="row"><input value="${esc(p.name)}" onchange="ren('periods','${p.id}',this.value)"><button class="tg ${p.open ? "" : "off"}" onclick="togP('${p.id}')">${p.open ? "● Aberto" : "○ Fechado"}</button><button class="dan" onclick="del('period','${p.id}')">Excluir</button></div>`).join("") || '<p class="empty">Nenhum período cadastrado.</p>'}</div>` }
     function aInds() { return addBox("Adicionar indicador de desenvolvimento", `<label>Descrição</label><input id="in" placeholder="Ex.: Reconhece letras do alfabeto">`, `<button class="btn" onclick="addInd()">Adicionar indicador</button>`) + `<div class="card"><h3>Indicadores (${D.inds.length})</h3>${D.inds.map((n, i) => `<div class="row"><span class="num">${i + 1}</span><input value="${esc(n.text)}" onchange="ren('inds','${n.id}',this.value)"><button class="ghost" style="height:34px;padding:0 10px" onclick="mv(${i},-1)">↑</button><button class="ghost" style="height:34px;padding:0 10px" onclick="mv(${i},1)">↓</button><button class="dan" onclick="del('ind','${n.id}')">Remover</button></div>`).join("")}</div>` }
     const val = id => $("#" + id).value.trim();
-    function addEscola() { const n = val("ne"), l = [...document.querySelectorAll(".ns:checked")].map(x => x.value); if (!n || !l.length) { $("#se").innerHTML = '<div class="err">Informe o nome e marque ao menos uma etapa.</div>'; return } { const s = { id: uid(), name: n, lids: l }; D.schools.push(s); commit([P("schools", s, 1)]); render() } }
+    function addEscola() { const n = val("ne"), l = [...document.querySelectorAll(".ns:checked")].map(x => x.value); if (!n || !l.length) { $("#se").innerHTML = '<div class="err">Informe o nome e marque ao menos uma etapa.</div>'; return } { const s = { id: uid(), name: n, lids: l }; D.schools.push(s); D.schools.sort((a, b) => (a.name || "").localeCompare(b.name || "", "pt-BR")); commit([P("schools", s, 1)]); render() } }
     const lvOpts = (sid, sel) => { const s = sch(sid); return D.levels.filter(l => s && s.lids.includes(l.id)).map(l => `<option value="${l.id}" ${l.id == sel ? "selected" : ""}>${esc(l.name)}</option>`).join("") || '<option value="">Sem etapas vinculadas</option>' };
     function chgTs() { $("#tl").innerHTML = lvOpts($("#ts").value) }
     function addTurma() { const n = val("tn"), s = $("#ts").value, l = $("#tl").value; if (s && !l) return alert("Esta escola ainda não tem etapas vinculadas. Marque as etapas na aba Escolas."); if (n && s && l) { const c = { id: uid(), yid: yr(), sid: s, name: n, lid: l, total: +$("#tt").value || 0 }; D.classes.push(c); commit([P("classes", c, 1)]); render() } }
