@@ -1559,7 +1559,10 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
               <button type="button" class="ghost" style="height:30px;padding:0 10px;font-size:.78rem" onclick="selAllSchools(false)">Limpar seleção</button>
             </div>
           </div>
-          <input type="text" id="ks_search" placeholder="🔍 Buscar escola por nome..." oninput="filtrarEscolasCoord(this.value)" style="width:100%;height:38px;margin-bottom:10px;border-radius:10px;background:var(--sf)">
+          <div style="position:relative;margin-bottom:10px">
+            <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--mut);pointer-events:none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path stroke-linecap="round" d="m21 21-4.35-4.35"></path></svg>
+            <input type="text" id="ks_search" placeholder="Buscar escola por nome..." oninput="filtrarEscolasCoord(this.value)" style="width:100%;height:38px;padding-left:36px;border-radius:10px;background:var(--sf)">
+          </div>
           <div class="sp-grid">
             ${D.schools.map(s => {
               const isChecked = curSids.includes(s.id);
