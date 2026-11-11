@@ -478,8 +478,15 @@
       gap: 16px
     }
 
+    .pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
     @media(max-width:760px) {
-      .two {
+      .two,
+      .pair {
         grid-template-columns: 1fr
       }
     }
@@ -531,7 +538,14 @@
     }
 
     .bar i {
-      display: block
+      display: block;
+      cursor: pointer;
+      transition: filter .15s ease, opacity .15s ease
+    }
+
+    .bar i:hover {
+      filter: brightness(1.15);
+      opacity: .88
     }
 
     .s {
@@ -880,6 +894,7 @@
       .card,
       .kpis,
       .two,
+      .pair,
       .tw table {
         break-inside: avoid;
         page-break-inside: avoid;
@@ -1130,7 +1145,16 @@
       const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0]; let f = 0; const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
       cl.forEach(c => { let a = 0; ps.forEach(p => { const r = (D.rec[c.id] || {})[p]; if (!r) return; a = 1; D.inds.forEach(i => (r[i.id] || []).forEach((v, j) => { pr[i.id][j] += +v || 0; t[j] += +v || 0 })) }); f += a }); return { pr, t, f }
     }
-    const bar = a => { const s = a[0] + a[1] + a[2]; return `<div class="bar" title="Sim ${pct(a[0], s)}% · Parcial ${pct(a[1], s)}% · Não ${pct(a[2], s)}%"><i class="s" style="width:${pct(a[0], s)}%"></i><i class="pa" style="width:${pct(a[1], s)}%"></i><i class="n" style="width:${pct(a[2], s)}%"></i></div>` };
+    const bar = a => {
+      const s = (+a[0] || 0) + (+a[1] || 0) + (+a[2] || 0);
+      if (!s) return `<div class="bar" title="Nenhum aluno registrado"><i style="width:100%;background:var(--ln)"></i></div>`;
+      const p0 = pct(a[0], s), p1 = pct(a[1], s), p2 = pct(a[2], s);
+      const t0 = `Sim: ${a[0]} ${a[0] == 1 ? "aluno" : "alunos"} (${p0}%)`;
+      const t1 = `Parcialmente: ${a[1]} ${a[1] == 1 ? "aluno" : "alunos"} (${p1}%)`;
+      const t2 = `Não: ${a[2]} ${a[2] == 1 ? "aluno" : "alunos"} (${p2}%)`;
+      const full = `Total: ${s} ${s == 1 ? "aluno avaliado" : "alunos avaliados"} · ${t0} · ${t1} · ${t2}`;
+      return `<div class="bar" title="${full}"><i class="s" style="width:${p0}%" title="${t0}"></i><i class="pa" style="width:${p1}%" title="${t1}"></i><i class="n" style="width:${p2}%" title="${t2}"></i></div>`;
+    };
     const LEG = `<div class="leg"><span><i class="s"></i>Sim</span><span><i class="pa"></i>Parcialmente</span><span><i class="n"></i>Não</span></div>`;
     let _L; function render() {
       const L = !S.user; $("#login").hidden = !L; $("#app").hidden = L; if (L !== _L) { _L = L; window.scrollTo(0, 0) } if (L) return;
@@ -1224,10 +1248,14 @@ function aResumo() {
     <div class="card">
       <h3>Visão geral</h3>
       ${tot ? `
-      <div class="donut" style="background:conic-gradient(var(--g) 0 ${a}%,var(--o) ${a}% ${b}%,var(--p) ${b}% 100%)">
+      <div class="donut" style="background:conic-gradient(var(--g) 0 ${a}%,var(--o) ${a}% ${b}%,var(--p) ${b}% 100%);cursor:pointer" title="Visão geral da rede (Total: ${tot} ${tot == 1 ? 'aluno avaliado' : 'alunos avaliados'}):&#10;• Sim: ${st.t[0]} (${a}%)&#10;• Parcialmente: ${st.t[1]} (${pct(st.t[1], tot)}%)&#10;• Não: ${st.t[2]} (${pct(st.t[2], tot)}%)">
         <div>${a}%</div>
       </div>
-      ${LEG}
+      <div class="leg">
+        <span style="cursor:pointer" title="Sim: ${st.t[0]} ${st.t[0] == 1 ? 'aluno' : 'alunos'} (${a}%)"><i class="s"></i>Sim: <b>${st.t[0]}</b> (${a}%)</span>
+        <span style="cursor:pointer" title="Parcialmente: ${st.t[1]} ${st.t[1] == 1 ? 'aluno' : 'alunos'} (${pct(st.t[1], tot)}%)"><i class="pa"></i>Parcial: <b>${st.t[1]}</b> (${pct(st.t[1], tot)}%)</span>
+        <span style="cursor:pointer" title="Não: ${st.t[2]} ${st.t[2] == 1 ? 'aluno' : 'alunos'} (${pct(st.t[2], tot)}%)"><i class="n"></i>Não: <b>${st.t[2]}</b> (${pct(st.t[2], tot)}%)</span>
+      </div>
       <p style="text-align:center;font-size:.82rem;color:var(--mut);margin:10px 0 0">Total: <b>${tot}</b> avaliações registradas</p>
       ` : `<p class="empty">Sem dados preenchidos</p>`}
     </div>
@@ -1245,7 +1273,7 @@ function aResumo() {
     </div>
   </div>` +
   (tot && fortes.length > 1 ? `
-  <div class="two">
+  <div class="pair">
     <div class="card">
       <h3>Maior desenvolvimento</h3>
       ${fortes.map(f => `
