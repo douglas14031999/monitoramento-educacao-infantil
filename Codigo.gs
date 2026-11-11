@@ -253,8 +253,10 @@ function quemE_(s) {
 }
 function sessao_(token) {
   if (!token || typeof token !== 'string') falhaAuth_();
-  const raw = CacheService.getScriptCache().get('s_' + token);
+  const cache = CacheService.getScriptCache();
+  const raw = cache.get('s_' + token);
   if (!raw) falhaAuth_();
+  cache.put('s_' + token, raw, SESSAO_SEGUNDOS);
   return quemE_(JSON.parse(raw));
 }
 
