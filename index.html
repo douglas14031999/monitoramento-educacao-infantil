@@ -1249,9 +1249,33 @@
       try { localStorage.setItem(CR, JSON.stringify({ cpf: c, pass })) } catch (e) { }
       $("#pw").value = ""; $("#pwbox").hidden = true; entrar(r)
     }
+    function classStatus(cid, pid) {
+      const r = (D.rec[cid] || {})[pid];
+      const total = D.inds.length || 1;
+      if (!r) return { status: "pendente", filled: 0, total, pct: 0 };
+      let filled = 0;
+      D.inds.forEach(ind => {
+        const v = r[ind.id] || [0, 0, 0];
+        const s = (+v[0] || 0) + (+v[1] || 0) + (+v[2] || 0);
+        if (s > 0) filled++;
+      });
+      if (filled === 0) return { status: "pendente", filled: 0, total, pct: 0 };
+      if (filled < total) return { status: "parcial", filled, total, pct: Math.round(filled / total * 100) };
+      return { status: "completa", filled, total, pct: 100 };
+    }
     function stats(cl, pid) {
-      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0]; let f = 0; const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
-      cl.forEach(c => { let a = 0; ps.forEach(p => { const r = (D.rec[c.id] || {})[p]; if (!r) return; a = 1; D.inds.forEach(i => (r[i.id] || []).forEach((v, j) => { pr[i.id][j] += +v || 0; t[j] += +v || 0 })) }); f += a }); return { pr, t, f }
+      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0]; let f = 0, parc = 0; const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
+      cl.forEach(c => {
+        ps.forEach(p => {
+          const st = classStatus(c.id, p);
+          if (st.status === "completa") f++;
+          else if (st.status === "parcial") parc++;
+          const r = (D.rec[c.id] || {})[p];
+          if (!r) return;
+          D.inds.forEach(i => (r[i.id] || []).forEach((v, j) => { pr[i.id][j] += +v || 0; t[j] += +v || 0 }));
+        });
+      });
+      return { pr, t, f, parc };
     }
     const bar = a => {
       const s = (+a[0] || 0) + (+a[1] || 0) + (+a[2] || 0);
@@ -1334,7 +1358,7 @@ function aResumo() {
   return `<div class="kpis">
     <div class="kpi a"><b>${D.schools.length}</b><small>Escolas</small></div>
     <div class="kpi b"><b>${yCl(yr()).length}</b><small>Turmas no ano</small></div>
-    <div class="kpi c"><b>${st.f}/${cl.length}</b><small>Turmas preenchidas</small></div>
+    <div class="kpi c"><b>${st.f}/${cl.length}</b><small>Turmas preenchidas${st.parc ? ` (${st.parc} parcial)` : ""}</small></div>
     <div class="kpi d"><b>${pct(st.t[0], tot)}%</b><small>Respostas “Sim”</small></div>
   </div>
   <div class="card noprint">
@@ -1674,9 +1698,21 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       if (!s) return `${back}<div class="hello"><h2>Escola não encontrada</h2></div>`;
       if (!op.length) return `${back}<div class="hello"><h2>${esc(s.name)}</h2></div><div class="card empty">Nenhum período está aberto para preenchimento no momento.<br>Aguarde a liberação pela Secretaria de Educação.</div>`;
       if (!op.find(p => p.id == S.pid)) S.pid = op[0].id;
-      if (!S.cid) { const cl = D.classes.filter(c => c.sid == S.sid && c.yid == D.cur); return `${back}<div class="hello"><h2>${esc(s.name)}</h2><p>Escolha o período e depois a turma para preencher os indicadores.</p></div><div class="pills">${op.map(p => `<button class="${p.id == S.pid ? "on" : ""}" onclick="go({pid:'${p.id}'})">${esc(p.name)}</button>`).join("")}</div><div class="list">${cl.map(c => { const d = (D.rec[c.id] || {})[S.pid]; return `<button class="item" onclick="go({cid:'${c.id}'})"><h4>${esc(c.name)}</h4><small>${esc(lname(c.lid))} · ${c.total || "-"} alunos</small><br><span class="badge ${d ? "" : "w"}">${d ? "✓ Preenchida" : "Pendente"}</span></button>` }).join("") || '<p class="empty">Nenhuma turma criada. Procure a Secretaria.</p>'}</div>` }
+      if (!S.cid) { const cl = D.classes.filter(c => c.sid == S.sid && c.yid == D.cur); return `${back}<div class="hello"><h2>${esc(s.name)}</h2><p>Escolha o período e depois a turma para preencher os indicadores.</p></div><div class="pills">${op.map(p => `<button class="${p.id == S.pid ? "on" : ""}" onclick="go({pid:'${p.id}'})">${esc(p.name)}</button>`).join("")}</div><div class="list">${cl.map(c => { const stCl = classStatus(c.id, S.pid);
+          const badgeHtml = stCl.status == "completa"
+            ? '<span class="badge">✓ Preenchida</span>'
+            : (stCl.status == "parcial"
+              ? `<span class="badge w">● Parcial (${stCl.filled}/${stCl.total})</span>`
+              : '<span class="badge x">Pendente</span>');
+          return `<button class="item" onclick="go({cid:'${c.id}'})"><h4>${esc(c.name)}</h4><small>${esc(lname(c.lid))} · ${c.total || "-"} alunos</small><br>${badgeHtml}</button>` }).join("") || '<p class="empty">Nenhuma turma criada. Procure a Secretaria.</p>'}</div>` }
       const c = D.classes.find(x => x.id == S.cid), r = (D.rec[c.id] || {})[S.pid] || {};
-      return `<button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button><div class="hello"><h2>${esc(c.name)} · ${esc(lname(c.lid))}</h2><p>${esc(s.name)} · ${esc(per(S.pid)?.name || "")} · ${c.total || "-"} alunos. Informe, em cada critério, quantos alunos se enquadram em cada resposta.</p></div><div class="card">${D.inds.map((n, i) => { const x = r[n.id] || ["", "", ""]; return `<div class="ind"><span class="num">${i + 1}</span><b style="font-weight:600">${esc(n.text)}</b><div class="ins"><div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}"></div><div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}"></div><div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}"></div></div></div>` }).join("")}<div id="fe"></div><button class="btn" id="sf" onclick="saveForm()">Salvar preenchimento</button><span class="ok" id="fo"></span></div>`
+      const stCl = classStatus(c.id, S.pid);
+      const progMsg = stCl.status == "completa"
+        ? '<span class="badge">✓ Todos os ' + stCl.total + ' critérios preenchidos</span>'
+        : (stCl.status == "parcial"
+          ? '<span class="badge w">● Preenchimento parcial: ' + stCl.filled + ' de ' + stCl.total + ' critérios preenchidos</span>'
+          : '<span class="badge x">Pendente: nenhum critério preenchido ainda</span>');
+      return `<button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button><div class="hello"><h2>${esc(c.name)} · ${esc(lname(c.lid))}</h2><p>${esc(s.name)} · ${esc(per(S.pid)?.name || "")} · ${c.total || "-"} alunos. Informe, em cada critério, quantos alunos se enquadram em cada resposta.</p><div style="margin-top:6px">${progMsg}</div></div>` + `<div class="card">${D.inds.map((n, i) => { const x = r[n.id] || ["", "", ""]; return `<div class="ind"><span class="num">${i + 1}</span><b style="font-weight:600">${esc(n.text)}</b><div class="ins"><div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}"></div><div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}"></div><div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}"></div></div></div>` }).join("")}<div id="fe"></div><button class="btn" id="sf" onclick="saveForm()">Salvar preenchimento</button><span class="ok" id="fo"></span></div>`
     }
     async function saveForm() {
       const r = {}; D.inds.forEach(i => r[i.id] = [0, 0, 0]); document.querySelectorAll(".ins input").forEach(e => r[e.dataset.i][e.dataset.j] = Math.max(0, +e.value || 0));
@@ -1687,7 +1723,17 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       if (res.ok) (D.rec[cid] = D.rec[cid] || {})[pid] = r;
       if (!b.isConnected) return;
       b.disabled = false;
-      if (res.ok) { $("#fe").innerHTML = ""; $("#fo").textContent = "✓ Salvo com sucesso" }
+      if (res.ok) {
+        const stCl = classStatus(cid, pid);
+        $("#fe").innerHTML = "";
+        if (stCl.status === "completa") {
+          $("#fo").textContent = "✓ Salvo com sucesso! Todos os critérios preenchidos.";
+        } else if (stCl.status === "parcial") {
+          $("#fo").textContent = `✓ Salvo parcialmente (${stCl.filled} de ${stCl.total} critérios preenchidos).`;
+        } else {
+          $("#fo").textContent = "✓ Salvo com sucesso.";
+        }
+      }
       else { $("#fo").textContent = ""; $("#fe").innerHTML = `<div class="err" style="margin:0 0 14px">${esc(res.err || "Não foi possível salvar. Tente novamente.")}</div>` }
     }
     render(); if (S.user) iniciarAuto(); restaurar();
