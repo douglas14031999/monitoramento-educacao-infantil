@@ -62,5 +62,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwxdl5pFK04PZ8grLDLZbol
 
 - **Proteção de CPFs:** A planilha de banco de dados deve permanecer restrita apenas ao administrador e à conta do Apps Script.
 - **Requisições sem Preflight:** As chamadas de API utilizam `Content-Type: text/plain;charset=utf-8` para compatibilidade total com o CORS do Google Apps Script sem bloqueios de preflight.
-- **Sessões Temporárias:** Os tokens de sessão são mantidos no `sessionStorage` e validados pelo `CacheService` do Apps Script.
+- **Sessões Persistentes e Seguras:** Os tokens de sessão são mantidos com segurança em armazenamento local (`localStorage`), mantendo o usuário conectado mesmo ao fechar ou atualizar o navegador, com renovação automática de TTL no Apps Script e expiração manual via botão "Sair".
+- **Sincronização em Tempo Real:** Atualizações periódicas automáticas a cada 20 segundos e ao alternar abas, com pausa inteligente para não sobrepor preenchimento de formulários em andamento.
+- **Identidade Visual e Favicon:** Brasão e identidade oficial de Lagoa da Canoa incluídos em alta resolução e configurados como favicon nativo (`.ico`, `.png` e inline).
 
