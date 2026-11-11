@@ -10,24 +10,26 @@
  *  1. Crie uma planilha nova no Google Sheets (conta institucional da Secretaria).
  *     NÃO compartilhe essa planilha com ninguém: ela guarda CPFs.
  *  2. Extensões > Apps Script. Apague o conteúdo e cole este arquivo inteiro.
- *  3. Abaixo, troque ADMIN_INICIAL pelo CPF (válido) do administrador.
- *  4. No menu de funções, escolha  configurarPlanilha  e clique em Executar.
- *     Autorize o acesso quando o Google pedir. As abas são criadas sozinhas.
- *     (Opcional, só para testar: execute também  carregarDadosDeExemplo .)
+ *  3. (Opcional) Troque ADMIN_INICIAL pelo seu CPF. Se deixar 000.000.000-00,
+ *     o primeiro CPF válido que fizer login no site será registrado automaticamente
+ *     como Administrador!
+ *  4. No menu de funções, escolha configurarPlanilha e clique em Executar.
+ *     Autorize o acesso quando o Google pedir. As abas e dados padrão são criados.
+ *     (Opcional, para testar: execute também carregarDadosDeExemplo).
  *  5. Implantar > Nova implantação > tipo "App da Web":
  *        Executar como:  Eu
  *        Quem tem acesso: Qualquer pessoa
- *     Copie a URL que termina em /exec e cole em API_URL no arquivo t2.html.
+ *     Copie a URL que termina em /exec e cole em API_URL no index.html.
  *  6. (Recomendado) Defina uma senha para o administrador:
  *     Configurações do projeto (engrenagem) > Propriedades do script >
- *     adicionar  SENHA_ADMIN  com a senha. Sem essa propriedade, o administrador
+ *     adicionar SENHA_ADMIN com a senha. Sem essa propriedade, o administrador
  *     entra só com o CPF.
  *
  * ATUALIZAÇÃO DO CÓDIGO: depois de alterar, Implantar > Gerenciar implantações >
  * lápis > Versão: "Nova versão" > Implantar. A URL continua a mesma.
  *****************************************************************************/
 
-const ADMIN_INICIAL = '000.000.000-00';   // <<< TROQUE antes de rodar configurarPlanilha()
+const ADMIN_INICIAL = '000.000.000-00';   // Se deixar padrão, o 1º login válido vira Administrador
 const NOME_ADMIN_INICIAL = 'Administrador';
 const SESSAO_SEGUNDOS = 6 * 60 * 60;      // 6 h (máximo permitido pelo CacheService)
 const MAX_TENTATIVAS = 5;                 // senhas erradas por CPF antes de bloquear 15 min
@@ -47,31 +49,71 @@ const SPEC = {
   recs:    { sheet: 'Preenchimentos', f: [['turma_id','cid','s'],['periodo_id','pid','s'],['indicador_id','iid','s'],['sim','a','n'],['parcial','b','n'],['nao','c','n'],['atualizado_em','at','s'],['atualizado_por','by','s']] },
   cfg:     { sheet: 'Config',         f: [['chave','k','s'],['valor','v','s']] }
 };
-const EDITAVEIS = ['years','levels','schools','classes','periods','inds','coords'];
+const EDITAVEIS = ['years','levels','schools','classes','periods','inds','coords','admins'];
 
-const INDICADORES_PADRAO = ['Identifica e escreve o próprio nome','Identifica as vogais','Identifica as consoantes','Identifica números até 20','Identifica formas geométricas','Brinca com números escritos associando sua quantidade aos objetos concretos','Identifica as cores','Participa de rodas de conversas, expondo suas ideias através de recontos','Respeita regras e rotinas de sala','Participa da construção de brinquedos com diferentes tipos de materiais','Interage com colegas, professor e outros adultos','Tem uma boa coordenação motora','Participa de brincadeiras desenvolvendo o controle e equilíbrio do corpo','Participa de atividades e brincadeiras propostas pelo professor','Tem noção de lateralidade'];
-const ETAPAS_PADRAO = ['Creche','Maternal I','Maternal II','Pré I','Pré II'];
+const INDICADORES_PADRAO = [
+  'Identifica e escreve o próprio nome',
+  'Identifica as vogais',
+  'Identifica as consoantes',
+  'Identifica números até 20',
+  'Identifica formas geométricas',
+  'Brinca com números escritos associando sua quantidade aos objetos concretos',
+  'Identifica as cores',
+  'Participa de rodas de conversas, expondo suas ideias através de recontos',
+  'Respeita regras e rotinas de sala',
+  'Participa da construção de brinquedos com diferentes tipos de materiais',
+  'Interage com colegas, professor e outros adultos',
+  'Tem uma boa coordenação motora',
+  'Participa de brincadeiras desenvolvendo o controle e equilíbrio do corpo',
+  'Participa de atividades e brincadeiras propostas pelo professor',
+  'Tem noção de lateralidade'
+];
+const ETAPAS_PADRAO = ['Creche', 'Maternal I', 'Maternal II', 'Pré I', 'Pré II'];
 
 /* ================= PONTOS DE ENTRADA ================= */
-function doGet() {
-  return saida_({ ok: true, msg: 'API da Educação Infantil no ar.' });
+function doGet(e) {
+  try {
+    garantirInicializacao_();
+    if (e && e.parameter) {
+      if (e.parameter.setup === '1' || e.parameter.init === '1') {
+        configurarPlanilha();
+        return saida_({ ok: true, msg: 'Planilha configurada e inicializada com sucesso.' });
+      }
+      if (e.parameter.exemplo === '1' || e.parameter.dados === '1') {
+        carregarDadosDeExemplo();
+        return saida_({ ok: true, msg: 'Dados de exemplo inseridos com sucesso na planilha.' });
+      }
+    }
+    return saida_({ ok: true, msg: 'API da Educação Infantil no ar e banco de dados sincronizado.' });
+  } catch (err) {
+    return saida_({ ok: false, err: 'Erro no doGet: ' + (err && err.message ? err.message : String(err)) });
+  }
 }
 
 function doPost(e) {
   let out;
   try {
     _DB = {};
+    garantirInicializacao_();
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (req.a === 'login') out = login_(req);
     else if (req.a === 'load') out = carregar_(req);
     else if (req.a === 'write') out = gravar_(req);
     else if (req.a === 'logout') out = sair_(req);
+    else if (req.a === 'setup' || req.a === 'init') {
+      configurarPlanilha();
+      out = { ok: true, msg: 'Planilha configurada com sucesso.' };
+    }
+    else if (req.a === 'exemplo') {
+      carregarDadosDeExemplo();
+      out = { ok: true, msg: 'Dados de exemplo carregados na planilha com sucesso.' };
+    }
     else falha_('Pedido inválido.');
   } catch (err) {
     if (err && err.usuario) out = { ok: false, err: err.msg, code: err.code || '' };
     else {
       console.error(err && err.stack ? err.stack : err);
-      out = { ok: false, err: 'Erro interno do servidor. Tente novamente; se persistir, avise a Secretaria.' };
+      out = { ok: false, err: 'Erro interno do servidor: ' + (err && err.message ? err.message : String(err)) };
     }
   }
   return saida_(out);
@@ -102,8 +144,16 @@ function cpfValido_(c) {
 }
 
 function folha_(nome) {
-  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SPEC[nome].sheet);
-  if (!sh) falha_('A planilha ainda não foi configurada. Execute configurarPlanilha() no Apps Script.');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) falha_('Planilha ativa não encontrada. Verifique se o script está dentro da planilha.');
+  let sh = ss.getSheetByName(SPEC[nome].sheet);
+  if (!sh) {
+    sh = ss.insertSheet(SPEC[nome].sheet);
+    const nc = SPEC[nome].f.length;
+    if (sh.getMaxColumns() < nc) sh.insertColumnsAfter(sh.getMaxColumns(), nc - sh.getMaxColumns());
+    sh.getRange(1, 1, 1, nc).setValues([SPEC[nome].f.map(c => c[0])]).setFontWeight('bold').setBackground('#E4F2EA');
+    sh.setFrozenRows(1);
+  }
   return sh;
 }
 
@@ -124,7 +174,8 @@ function paraLinha_(s, o) {
     const v = o[c[1]], t = c[2];
     if (t === 'n') return Number(v) || 0;
     if (t === 'b') return v ? 'SIM' : 'NÃO';
-    if (t === 'l') return (v || []).join(',');
+    if (t === 'l') return Array.isArray(v) ? v.join(',') : String(v || '');
+    if (t === 'c') return cpfNorm_(v);
     return String(v == null ? '' : v);
   });
 }
@@ -142,18 +193,27 @@ function tbl_(nome) {
 }
 
 function gravarTabela_(nome) {
-  const s = SPEC[nome], sh = folha_(nome), t = _DB[nome], n = t.rows.length, nc = s.f.length;
+  const s = SPEC[nome], sh = folha_(nome), t = _DB[nome];
+  if (!t) return;
+  const n = t.rows.length, nc = s.f.length;
+  if (sh.getMaxColumns() < nc) sh.insertColumnsAfter(sh.getMaxColumns(), nc - sh.getMaxColumns());
   const antes = Math.max(0, sh.getLastRow() - 1);
   if (n > 0) {
     if (sh.getMaxRows() < n + 1) sh.insertRowsAfter(sh.getMaxRows(), n + 1 - sh.getMaxRows());
     const rg = sh.getRange(2, 1, n, nc);
-    // formato "texto simples" nas colunas de texto: preserva zeros à esquerda do CPF e IDs como "1e5"
-    rg.setNumberFormats(t.rows.map(() => s.f.map(c => c[2] === 'n' ? 'General' : '@')));
+    try {
+      rg.setNumberFormats(t.rows.map(() => s.f.map(c => c[2] === 'n' ? 'General' : '@')));
+    } catch (e) {
+      console.warn('setNumberFormats aviso:', e);
+    }
     rg.setValues(t.rows.map(o => paraLinha_(s, o)));
   }
-  if (antes > n) sh.getRange(n + 2, 1, antes - n, nc).clearContent();
+  if (antes > n) {
+    sh.getRange(n + 2, 1, antes - n, nc).clearContent();
+  }
   t.dirty = false;
 }
+
 function gravarTudo_() {
   Object.keys(_DB).forEach(n => { if (_DB[n].dirty) gravarTabela_(n); });
   SpreadsheetApp.flush();
@@ -173,14 +233,14 @@ function definirVigente_(id) {
 }
 
 /* ================= SESSÃO E LOGIN ================= */
-function igual_(a, b) {            // comparação sem "vazar" onde diferiu
+function igual_(a, b) {
   a = String(a); b = String(b);
   let d = a.length ^ b.length;
   for (let i = 0; i < Math.max(a.length, b.length); i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
   return d === 0;
 }
 
-function quemE_(s) {               // revalida a cada pedido (se o cadastro mudou, a sessão acompanha)
+function quemE_(s) {
   if (s.role === 'admin') {
     const a = tbl_('admins').rows.find(x => x.cpf === s.cpf);
     if (!a) falhaAuth_();
@@ -206,27 +266,35 @@ function login_(req) {
   if (cache.get('bloq_' + cpf)) falha_('Muitas tentativas. Aguarde 15 minutos e tente novamente.');
 
   let quem;
-  const adm = tbl_('admins').rows.find(a => a.cpf === cpf);
-  if (adm) {
-    const senha = PropertiesService.getScriptProperties().getProperty('SENHA_ADMIN');
-    if (senha) {
-      if (!req.pass) return { ok: false, needPass: true, err: 'Informe a senha do administrador.' };
-      if (!igual_(req.pass, senha)) {
-        const n = Number(cache.get('f_' + cpf) || 0) + 1;
-        cache.put('f_' + cpf, String(n), 900);
-        if (n >= MAX_TENTATIVAS) cache.put('bloq_' + cpf, '1', 900);
-        Utilities.sleep(800);
-        falha_('Senha incorreta.');
-      }
-      cache.remove('f_' + cpf);
-    }
-    quem = { role: 'admin', cpf: cpf, name: adm.name || 'Administrador' };
+  // Se ainda não há nenhum administrador cadastrado, o primeiro CPF válido que fizer login vira Administrador
+  if (!tbl_('admins').rows.length) {
+    tbl_('admins').rows.push({ cpf: cpf, name: NOME_ADMIN_INICIAL });
+    sujar_('admins');
+    gravarTudo_();
+    quem = { role: 'admin', cpf: cpf, name: NOME_ADMIN_INICIAL };
   } else {
-    const k = tbl_('coords').rows.find(x => x.cpf === cpf);
-    if (!k) { Utilities.sleep(800); falha_('CPF não cadastrado. Procure a Secretaria de Educação.'); }
-    const sids = k.sids.filter(id => tbl_('schools').rows.some(e => e.id === id));
-    if (!sids.length) falha_('Nenhuma escola vinculada a este CPF.');
-    quem = { role: 'coord', cpf: cpf, name: k.name, sids: sids };
+    const adm = tbl_('admins').rows.find(a => a.cpf === cpf);
+    if (adm) {
+      const senha = PropertiesService.getScriptProperties().getProperty('SENHA_ADMIN');
+      if (senha) {
+        if (!req.pass) return { ok: false, needPass: true, err: 'Informe a senha do administrador.' };
+        if (!igual_(req.pass, senha)) {
+          const n = Number(cache.get('f_' + cpf) || 0) + 1;
+          cache.put('f_' + cpf, String(n), 900);
+          if (n >= MAX_TENTATIVAS) cache.put('bloq_' + cpf, '1', 900);
+          Utilities.sleep(800);
+          falha_('Senha incorreta.');
+        }
+        cache.remove('f_' + cpf);
+      }
+      quem = { role: 'admin', cpf: cpf, name: adm.name || 'Administrador' };
+    } else {
+      const k = tbl_('coords').rows.find(x => x.cpf === cpf);
+      if (!k) { Utilities.sleep(800); falha_('CPF não cadastrado. Procure a Secretaria de Educação.'); }
+      const sids = k.sids.filter(id => tbl_('schools').rows.some(e => e.id === id));
+      if (!sids.length) falha_('Nenhuma escola vinculada a este CPF.');
+      quem = { role: 'coord', cpf: cpf, name: k.name, sids: sids };
+    }
   }
   const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   cache.put('s_' + token, JSON.stringify({ role: quem.role, cpf: cpf }), SESSAO_SEGUNDOS);
@@ -286,12 +354,12 @@ function gravar_(req) {
   const trava = LockService.getScriptLock();
   try { trava.waitLock(25000); } catch (e) { falha_('O sistema está ocupado. Tente novamente em instantes.'); }
   try {
-    _DB = {};                                   // sempre lê a planilha de novo, já dentro da trava
+    _DB = {};
     const quem = sessao_(req.token);
     const ops = req.ops;
     if (!Array.isArray(ops) || ops.length > 3000) falha_('Pedido inválido.');
     const ctx = { q: quem, cur: anoVigente_() };
-    ops.forEach(op => aplicar_(ctx, op));       // se qualquer uma falhar, nada é gravado
+    ops.forEach(op => aplicar_(ctx, op));
     if (ctx.cur !== anoVigente_()) definirVigente_(ctx.cur);
     gravarTudo_();
     return { ok: true };
@@ -341,13 +409,12 @@ function limpar_(k, o) {
 
 function opPut_(ctx, op) {
   if (EDITAVEIS.indexOf(op.k) < 0) falha_('Operação desconhecida.');
-  const k = op.k, o = limpar_(k, op.o), chave = k === 'coords' ? 'cpf' : 'id', t = tbl_(k);
+  const k = op.k, o = limpar_(k, op.o), chave = (k === 'coords' || k === 'admins') ? 'cpf' : 'id', t = tbl_(k);
   if (!o[chave]) falha_('Cadastro sem identificação.');
-  // op.n = "cadastro novo": se já existir, recusa em vez de sobrescrever
   if (op.n && t.rows.some(x => x[chave] === o[chave]))
-    falha_(k === 'coords' ? 'Este CPF já está cadastrado. Use o botão Editar na lista.' : 'Este cadastro já existe.');
+    falha_((k === 'coords' || k === 'admins') ? 'Este CPF já está cadastrado.' : 'Este cadastro já existe.');
   const outro = x => x[chave] !== o[chave];
-  const nomeIgual = x => x.name.toLowerCase() === o.name.toLowerCase();
+  const nomeIgual = x => x.name && o.name && x.name.toLowerCase() === o.name.toLowerCase();
 
   if (k === 'years') {
     if (!o.name) falha_('Informe o nome do ano letivo.');
@@ -390,6 +457,11 @@ function opPut_(ctx, op) {
     const esc = tbl_('schools').rows;
     if (!o.sids.every(s => esc.some(e => e.id === s))) falha_('Escola não encontrada.');
   }
+  if (k === 'admins') {
+    if (!o.name || o.cpf.length !== 11) falha_('Informe nome e CPF completo.');
+    if (!cpfValido_(o.cpf)) falha_('CPF inválido. Confira os números.');
+    if (tbl_('coords').rows.some(c => c.cpf === o.cpf)) falha_('Este CPF já pertence a um coordenador.');
+  }
 
   const i = t.rows.findIndex(x => x[chave] === o[chave]);
   if (i >= 0) t.rows[i] = o; else t.rows.push(o);
@@ -399,8 +471,8 @@ function opPut_(ctx, op) {
 
 function opDel_(ctx, op) {
   if (EDITAVEIS.indexOf(op.k) < 0) falha_('Operação desconhecida.');
-  const k = op.k, id = String(op.id), chave = k === 'coords' ? 'cpf' : 'id', t = tbl_(k);
-  if (!t.rows.some(x => x[chave] === id)) return;            // já não existe: tudo certo
+  const k = op.k, id = String(op.id), chave = (k === 'coords' || k === 'admins') ? 'cpf' : 'id', t = tbl_(k);
+  if (!t.rows.some(x => x[chave] === id)) return;
   const tirar = (nome, fn) => { const tt = tbl_(nome), n = tt.rows.length; tt.rows = tt.rows.filter(x => !fn(x)); if (tt.rows.length !== n) tt.dirty = true; };
 
   if (k === 'years') {
@@ -423,6 +495,9 @@ function opDel_(ctx, op) {
   if (k === 'classes') removerRecs_(r => r.cid === id);
   if (k === 'periods') removerRecs_(r => r.pid === id);
   if (k === 'inds') removerRecs_(r => r.iid === id);
+  if (k === 'admins') {
+    if (t.rows.length < 2) falha_('É preciso manter ao menos um administrador.');
+  }
   tirar(k, x => x[chave] === id);
 }
 
@@ -437,7 +512,8 @@ function opRec_(ctx, op) {
     if (!p.open) falha_('Este período está fechado para preenchimento.');
   }
   const r = op.r || {}, novas = [], ruins = [];
-  const agora = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+  const tz = Session.getScriptTimeZone() || 'America/Maceio';
+  const agora = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
   tbl_('inds').rows.forEach((ind, i) => {
     const v = Array.isArray(r[ind.id]) ? r[ind.id] : [0, 0, 0];
     const n = [0, 1, 2].map(j => Math.max(0, Math.floor(Number(v[j]) || 0)));
@@ -449,50 +525,131 @@ function opRec_(ctx, op) {
   const t = tbl_('recs'); novas.forEach(x => t.rows.push(x)); t.dirty = true;
 }
 
-/* ================= CONFIGURAÇÃO INICIAL (rodar no editor) ================= */
+/* ================= CONFIGURAÇÃO INICIAL (rodar no editor ou automático) ================= */
+function garantirInicializacao_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) return;
+  let precisaGravar = false;
+
+  Object.keys(SPEC).forEach(nome => {
+    const s = SPEC[nome];
+    let sh = ss.getSheetByName(s.sheet);
+    if (!sh) {
+      sh = ss.insertSheet(s.sheet);
+      if (sh.getMaxColumns() < s.f.length) {
+        sh.insertColumnsAfter(sh.getMaxColumns(), s.f.length - sh.getMaxColumns());
+      }
+      sh.getRange(1, 1, 1, s.f.length).setValues([s.f.map(c => c[0])]).setFontWeight('bold').setBackground('#E4F2EA');
+      sh.setFrozenRows(1);
+    }
+  });
+
+  if (!tbl_('levels').rows.length) {
+    tbl_('levels').rows = ETAPAS_PADRAO.map((n, i) => ({ id: 'l' + (i + 1), name: n, ord: i }));
+    sujar_('levels');
+    precisaGravar = true;
+  }
+  if (!tbl_('inds').rows.length) {
+    tbl_('inds').rows = INDICADORES_PADRAO.map((t, i) => ({ id: 'i' + (i + 1), text: t, ord: i }));
+    sujar_('inds');
+    precisaGravar = true;
+  }
+  if (!tbl_('years').rows.length) {
+    tbl_('years').rows.push({ id: 'y1', name: String(new Date().getFullYear()) });
+    sujar_('years');
+    precisaGravar = true;
+  }
+  if (!tbl_('cfg').rows.some(r => r.k === 'ano_vigente')) {
+    definirVigente_(anoVigente_());
+    precisaGravar = true;
+  }
+
+  if (precisaGravar) {
+    gravarTudo_();
+  }
+}
+
 function configurarPlanilha() {
   const admin = cpfNorm_(ADMIN_INICIAL);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   _DB = {};
+  
   Object.keys(SPEC).forEach(nome => {
     const s = SPEC[nome];
     const sh = ss.getSheetByName(s.sheet) || ss.insertSheet(s.sheet);
+    if (sh.getMaxColumns() < s.f.length) {
+      sh.insertColumnsAfter(sh.getMaxColumns(), s.f.length - sh.getMaxColumns());
+    }
     sh.getRange(1, 1, 1, s.f.length).setValues([s.f.map(c => c[0])]).setFontWeight('bold').setBackground('#E4F2EA');
     sh.setFrozenRows(1);
   });
-  ['Planilha1', 'Sheet1'].forEach(n => { const x = ss.getSheetByName(n); if (x && x.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(x); });
+  
+  ['Planilha1', 'Sheet1'].forEach(n => {
+    const x = ss.getSheetByName(n);
+    if (x && x.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(x);
+  });
 
-  if (!tbl_('admins').rows.length) {
-    if (!cpfValido_(admin)) throw new Error('Edite ADMIN_INICIAL no topo do código com o CPF (válido) do administrador e rode de novo.');
-    tbl_('admins').rows.push({ cpf: admin, name: NOME_ADMIN_INICIAL }); sujar_('admins');
+  if (!tbl_('levels').rows.length) {
+    tbl_('levels').rows = ETAPAS_PADRAO.map((n, i) => ({ id: 'l' + (i + 1), name: n, ord: i }));
+    sujar_('levels');
   }
-  if (!tbl_('levels').rows.length) { tbl_('levels').rows = ETAPAS_PADRAO.map((n, i) => ({ id: 'l' + (i + 1), name: n, ord: i })); sujar_('levels'); }
-  if (!tbl_('inds').rows.length) { tbl_('inds').rows = INDICADORES_PADRAO.map((t, i) => ({ id: 'i' + (i + 1), text: t, ord: i })); sujar_('inds'); }
-  if (!tbl_('years').rows.length) { tbl_('years').rows.push({ id: 'y1', name: String(new Date().getFullYear()) }); sujar_('years'); }
+  if (!tbl_('inds').rows.length) {
+    tbl_('inds').rows = INDICADORES_PADRAO.map((t, i) => ({ id: 'i' + (i + 1), text: t, ord: i }));
+    sujar_('inds');
+  }
+  if (!tbl_('years').rows.length) {
+    tbl_('years').rows.push({ id: 'y1', name: String(new Date().getFullYear()) });
+    sujar_('years');
+  }
   definirVigente_(anoVigente_());
+
+  if (cpfValido_(admin)) {
+    if (!tbl_('admins').rows.some(a => a.cpf === admin)) {
+      tbl_('admins').rows.push({ cpf: admin, name: NOME_ADMIN_INICIAL });
+      sujar_('admins');
+    }
+  }
+
   gravarTudo_();
-  Logger.log('Planilha configurada. Administrador: ' + admin + '. Agora implante como App da Web (veja o topo do arquivo).');
+  Logger.log('Planilha configurada com sucesso!');
 }
 
-/* Só para testar: cria escolas, turmas, períodos e 2 coordenadores fictícios. Apague depois pelo site. */
+/* Cria escolas, turmas, períodos e 2 coordenadores fictícios para testar o CRUD imediatamente */
 function carregarDadosDeExemplo() {
   _DB = {};
-  if (tbl_('schools').rows.length) { Logger.log('Já existem escolas; nada foi feito.'); return; }
+  garantirInicializacao_();
   const y = anoVigente_();
-  tbl_('schools').rows = [
-    { id: 'e1', name: 'Escola Municipal Maria das Dores', lids: ['l4', 'l5'] },
-    { id: 'e2', name: 'Creche Municipal Pequeno Cidadão', lids: ['l1', 'l2', 'l3', 'l4'] },
-    { id: 'e3', name: 'Escola Municipal Santa Luzia', lids: ['l4', 'l5'] }];
-  tbl_('classes').rows = [
-    { id: 'c1', yid: y, sid: 'e1', name: 'Pré I – A', lid: 'l4', total: 20 },
-    { id: 'c2', yid: y, sid: 'e1', name: 'Pré II – A', lid: 'l5', total: 22 },
-    { id: 'c3', yid: y, sid: 'e2', name: 'Pré I – B', lid: 'l4', total: 18 },
-    { id: 'c4', yid: y, sid: 'e3', name: 'Pré II – A', lid: 'l5', total: 21 }];
-  tbl_('periods').rows = [{ id: 'p1', yid: y, name: '1º Bimestre', open: true }, { id: 'p2', yid: y, name: '2º Bimestre', open: false }];
-  tbl_('coords').rows = [
-    { cpf: '52998224725', name: 'Coordenadora Ana', sids: ['e1', 'e2'] },
-    { cpf: '11144477735', name: 'Coordenador Carlos', sids: ['e3'] }];
-  ['schools', 'classes', 'periods', 'coords'].forEach(sujar_);
+  if (!tbl_('schools').rows.length) {
+    tbl_('schools').rows = [
+      { id: 'e1', name: 'Escola Municipal Maria das Dores', lids: ['l4', 'l5'] },
+      { id: 'e2', name: 'Creche Municipal Pequeno Cidadão', lids: ['l1', 'l2', 'l3', 'l4'] },
+      { id: 'e3', name: 'Escola Municipal Santa Luzia', lids: ['l4', 'l5'] }
+    ];
+    sujar_('schools');
+  }
+  if (!tbl_('classes').rows.length) {
+    tbl_('classes').rows = [
+      { id: 'c1', yid: y, sid: 'e1', name: 'Pré I – A', lid: 'l4', total: 20 },
+      { id: 'c2', yid: y, sid: 'e1', name: 'Pré II – A', lid: 'l5', total: 22 },
+      { id: 'c3', yid: y, sid: 'e2', name: 'Pré I – B', lid: 'l4', total: 18 },
+      { id: 'c4', yid: y, sid: 'e3', name: 'Pré II – A', lid: 'l5', total: 21 }
+    ];
+    sujar_('classes');
+  }
+  if (!tbl_('periods').rows.length) {
+    tbl_('periods').rows = [
+      { id: 'p1', yid: y, name: '1º Bimestre', open: true },
+      { id: 'p2', yid: y, name: '2º Bimestre', open: false }
+    ];
+    sujar_('periods');
+  }
+  if (!tbl_('coords').rows.length) {
+    tbl_('coords').rows = [
+      { cpf: '52998224725', name: 'Coordenadora Ana', sids: ['e1', 'e2'] },
+      { cpf: '11144477735', name: 'Coordenador Carlos', sids: ['e3'] }
+    ];
+    sujar_('coords');
+  }
   gravarTudo_();
-  Logger.log('Exemplo carregado. Coordenadores de teste: 529.982.247-25 (2 escolas) e 111.444.777-35 (1 escola).');
+  Logger.log('Dados de exemplo inseridos com sucesso na planilha.');
 }
