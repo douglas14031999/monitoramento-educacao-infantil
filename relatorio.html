@@ -1689,13 +1689,45 @@
       return { status: "pendente", filled: 0, total };
     }
 
+    function turmaStatusGeral(cid, pid) {
+      if (pid) return classStatus(cid, pid);
+      const ps = yPer(yr());
+      let maxFilled = 0;
+      let hasCompleta = false;
+      let hasParcial = false;
+      ps.forEach(pObj => {
+        const st = classStatus(cid, pObj.id);
+        if (st.status === "completa") hasCompleta = true;
+        if (st.status === "parcial") hasParcial = true;
+        if (st.filled > maxFilled) maxFilled = st.filled;
+      });
+      if (hasCompleta) return { status: "completa", filled: D.inds.length, total: D.inds.length };
+      if (hasParcial || maxFilled > 0) return { status: "parcial", filled: maxFilled, total: D.inds.length };
+      return { status: "pendente", filled: 0, total: D.inds.length };
+    }
+
     function stats(cl, pid) {
-      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0]; let f = 0, parc = 0; const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
+      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0];
+      let f = 0, parc = 0;
+      const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
+
       cl.forEach(c => {
-        ps.forEach(p => {
-          const st = classStatus(c.id, p);
+        if (pid) {
+          const st = classStatus(c.id, pid);
           if (st.status === "completa") f++;
           else if (st.status === "parcial") parc++;
+        } else {
+          let cCompleta = false, cParcial = false;
+          ps.forEach(p => {
+            const st = classStatus(c.id, p);
+            if (st.status === "completa") cCompleta = true;
+            else if (st.status === "parcial") cParcial = true;
+          });
+          if (cCompleta) f++;
+          else if (cParcial) parc++;
+        }
+
+        ps.forEach(p => {
           const r = (D.rec[c.id] || {})[p];
           if (!r) return;
           D.inds.forEach(i => (r[i.id] || []).forEach((v, j) => { pr[i.id][j] += +v || 0; t[j] += +v || 0 }));
@@ -1780,7 +1812,7 @@
       const turmasTable = cl.map(c => {
         const q = stats([c], p);
         const sTot = q.t[0] + q.t[1] + q.t[2];
-        const stCl = classStatus(c.id, p || (yPer(y)[0]?.id));
+        const stCl = turmaStatusGeral(c.id, p);
         return {
           name: c.name,
           etapa: lname(c.lid),
@@ -2107,41 +2139,77 @@
     async function init() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("year")) S.curYear = params.get("year");
-      if (params.get("fp")) S.fp = params.get("fp");
-      if (params.get("fs")) S.fs = params.get("fs");
-      if (params.get("fl")) S.fl = params.get("fl");
+      if (params.get("fp") !== null) S.fp = params.get("fp");
+      if (params.get("fs") !== null) S.fs = params.get("fs");
+      if (params.get("fl") !== null) S.fl = params.get("fl");
 
       const cached = localStorage.getItem(CK);
+      let loadedFromCache = false;
       if (cached) {
         try {
           const r = JSON.parse(cached);
           if (r && r.data) {
             D = Object.assign(vazio(), r.data);
             renderPrint();
-            if (params.get("autoprint") === "1") {
-              setTimeout(() => window.print(), 500);
-            }
-            return;
+            loadedFromCache = true;
           }
         } catch (e) { console.error(e); }
       }
 
+      // Buscar dados mais recentes da planilha em segundo plano
       try {
-        const resp = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ a: "ping" })
-        });
-        const r = await resp.json();
-        if (r && r.data) {
+        const TK = "semed_infantil_sessao_v2";
+        const CR = "semed_infantil_cred_v2";
+        const tok = localStorage.getItem(TK) || "";
+        let r = null;
+
+        if (tok) {
+          try {
+            const resp = await fetch(API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({ a: "load", token: tok })
+            });
+            r = await resp.json();
+          } catch (e) {}
+        }
+
+        if (!r || !r.ok) {
+          const credStr = localStorage.getItem(CR);
+          if (credStr) {
+            try {
+              const cred = JSON.parse(credStr);
+              if (cred && cred.cpf) {
+                const resp = await fetch(API_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "text/plain;charset=utf-8" },
+                  body: JSON.stringify({ a: "login", cpf: cred.cpf, pass: cred.pass || "" })
+                });
+                r = await resp.json();
+                if (r && r.ok && r.token) {
+                  try { localStorage.setItem(TK, r.token); } catch(e){}
+                }
+              }
+            } catch (e) {}
+          }
+        }
+
+        if (r && r.ok && r.data) {
           D = Object.assign(vazio(), r.data);
-          try { localStorage.setItem(CK, JSON.stringify({ data: r.data })); } catch(e){}
+          try {
+            localStorage.setItem(CK, JSON.stringify({ data: r.data, role: r.role || "admin", name: r.name || "" }));
+          } catch (e) {}
           renderPrint();
           if (params.get("autoprint") === "1") {
             setTimeout(() => window.print(), 500);
           }
+          return;
         }
       } catch (err) {
+        console.warn("Falha ao sincronizar com servidor, mantendo dados locais:", err);
+      }
+
+      if (!loadedFromCache) {
         document.getElementById("print-root").innerHTML = `
           <div style="text-align:center;padding:50px 20px;color:#b0003f">
             <h3>Não foi possível carregar os dados para impressão</h3>
@@ -2149,6 +2217,8 @@
             <a href="index.html" class="btn" style="text-decoration:none;display:inline-block;margin-top:14px">Ir para o Sistema</a>
           </div>
         `;
+      } else if (params.get("autoprint") === "1") {
+        setTimeout(() => window.print(), 500);
       }
     }
 

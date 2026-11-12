@@ -1764,7 +1764,7 @@
       if (S.sid && !sch(S.sid)) { S.sid = null; S.cid = null }
       if (S.cid && !D.classes.some(c => c.id == S.cid)) S.cid = null;
       if (S.fp && !per(S.fp)) S.fp = ""; if (S.fs && !sch(S.fs)) S.fs = ""; if (S.fl && !D.levels.some(l => l.id == S.fl)) S.fl = "";
-      try { localStorage.setItem(CK, JSON.stringify({ data: r.data, role: r.role, name: r.name })) } catch (e) { }
+      try { localStorage.setItem(CK, JSON.stringify({ data: r.data, role: r.role, name: r.name, token: TOK })) } catch (e) { }
       if (S.user && S.user.role == "admin") { setTimeout(garantirEscolasRede, 100); }
     }
     const ESCOLAS_CANOA = [
@@ -1975,13 +1975,45 @@
       if (filled < total) return { status: "parcial", filled, total, pct: Math.round(filled / total * 100) };
       return { status: "completa", filled, total, pct: 100 };
     }
+    function turmaStatusGeral(cid, pid) {
+      if (pid) return classStatus(cid, pid);
+      const ps = yPer(yr());
+      let maxFilled = 0;
+      let hasCompleta = false;
+      let hasParcial = false;
+      ps.forEach(pObj => {
+        const st = classStatus(cid, pObj.id);
+        if (st.status === "completa") hasCompleta = true;
+        if (st.status === "parcial") hasParcial = true;
+        if (st.filled > maxFilled) maxFilled = st.filled;
+      });
+      if (hasCompleta) return { status: "completa", filled: D.inds.length, total: D.inds.length };
+      if (hasParcial || maxFilled > 0) return { status: "parcial", filled: maxFilled, total: D.inds.length };
+      return { status: "pendente", filled: 0, total: D.inds.length };
+    }
+
     function stats(cl, pid) {
-      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0]; let f = 0, parc = 0; const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
+      const pr = {}; D.inds.forEach(i => pr[i.id] = [0, 0, 0]); const t = [0, 0, 0];
+      let f = 0, parc = 0;
+      const ps = pid ? [pid] : yPer(yr()).map(p => p.id);
+
       cl.forEach(c => {
-        ps.forEach(p => {
-          const st = classStatus(c.id, p);
+        if (pid) {
+          const st = classStatus(c.id, pid);
           if (st.status === "completa") f++;
           else if (st.status === "parcial") parc++;
+        } else {
+          let cCompleta = false, cParcial = false;
+          ps.forEach(p => {
+            const st = classStatus(c.id, p);
+            if (st.status === "completa") cCompleta = true;
+            else if (st.status === "parcial") cParcial = true;
+          });
+          if (cCompleta) f++;
+          else if (cParcial) parc++;
+        }
+
+        ps.forEach(p => {
           const r = (D.rec[c.id] || {})[p];
           if (!r) return;
           D.inds.forEach(i => (r[i.id] || []).forEach((v, j) => { pr[i.id][j] += +v || 0; t[j] += +v || 0 }));
@@ -2081,7 +2113,7 @@ function aImpressao() {
   const turmasTable = cl.map(c => {
     const q = stats([c], p);
     const sTot = q.t[0] + q.t[1] + q.t[2];
-    const stCl = classStatus(c.id, p || (yPer(y)[0]?.id));
+    const stCl = turmaStatusGeral(c.id, p);
     return {
       name: c.name,
       etapa: lname(c.lid),
@@ -3071,7 +3103,15 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       }
 
       const res = await commit(ops, true);
-      if (res.ok) (D.rec[cid] = D.rec[cid] || {})[pid] = r;
+      if (res.ok) {
+        (D.rec[cid] = D.rec[cid] || {})[pid] = r;
+        try {
+          const cached = localStorage.getItem(CK);
+          const obj = cached ? JSON.parse(cached) : {};
+          obj.data = D;
+          localStorage.setItem(CK, JSON.stringify(obj));
+        } catch (e) {}
+      }
       if (!b.isConnected) return;
       b.disabled = false;
 
