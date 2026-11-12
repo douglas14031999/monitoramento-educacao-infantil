@@ -985,6 +985,666 @@
       flex-shrink: 0 !important;
     }
 
+  
+    /* ===== PÁGINA DE IMPRESSÃO (A4) ===== */
+    .print-stage {
+      background: #edf2f0;
+      padding: 20px 12px 48px;
+      border-radius: 12px;
+      margin-top: 14px;
+    }
+
+    .print-toolbar {
+      background: var(--sf);
+      border: 1.5px solid var(--ln);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 4px 14px rgba(23, 63, 49, .06);
+    }
+
+    .print-toolbar .pt-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      flex: 1 1 540px;
+    }
+
+    .print-toolbar .pt-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pt-filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+      flex: 1 1 140px;
+    }
+
+    .pt-filter-group label {
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--mut);
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .pt-filter-group select {
+      height: 38px;
+      font-size: .85rem;
+      border-radius: 8px;
+      padding: 0 10px;
+    }
+
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      color: #1a1a1a;
+      margin: 0 auto 28px;
+      padding: 14mm 16mm 14mm 16mm;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+      box-sizing: border-box;
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.35;
+    }
+
+    /* CABEÇALHO OFICIAL MODELO LAGOA DA CANOA */
+    .print-official-header {
+      width: 100%;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .poh-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 6px;
+    }
+
+    .poh-logo {
+      flex: 0 0 auto;
+    }
+
+    .poh-logo img {
+      height: 52px;
+      width: auto;
+      display: block;
+    }
+
+    .poh-divider {
+      width: 1.5px;
+      height: 48px;
+      background-color: #0e3023;
+      flex: 0 0 1.5px;
+    }
+
+    .poh-text {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .poh-sub {
+      font-size: 8pt;
+      font-weight: 700;
+      color: #111;
+      letter-spacing: 0.03em;
+      line-height: 1.22;
+      text-transform: uppercase;
+    }
+
+    .poh-main {
+      font-size: 11.5pt;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+      text-transform: uppercase;
+      margin: 1px 0;
+    }
+
+    .poh-badge {
+      flex: 0 0 auto;
+      text-align: right;
+      font-size: 8pt;
+      font-weight: 700;
+      color: #2F7D5B;
+      background: #eaf5f0;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #c2e2d3;
+    }
+
+    .poh-stripe {
+      display: flex;
+      width: 100%;
+      height: 3.5px;
+      margin-top: 4px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .poh-stripe .poh-g {
+      background: #2F7D5B;
+      flex: 32;
+      height: 100%;
+    }
+
+    .poh-stripe .poh-o {
+      background: #F47B20;
+      flex: 34;
+      height: 100%;
+    }
+
+    .poh-stripe .poh-p {
+      background: #E6007E;
+      flex: 34;
+      height: 100%;
+    }
+
+    /* ELEMENTOS DO RELATÓRIO IMPRESSO */
+    .print-doc-title {
+      text-align: center;
+      margin: 10px 0 12px;
+    }
+
+    .print-doc-title h2 {
+      margin: 0;
+      font-size: 13pt;
+      font-weight: 900;
+      letter-spacing: .02em;
+      color: #153B2E;
+      text-transform: uppercase;
+    }
+
+    .print-doc-title p {
+      margin: 2px 0 0;
+      font-size: 8pt;
+      color: #555;
+      font-weight: 600;
+    }
+
+    .print-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .print-meta-box {
+      background: #f7faf8;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+
+    .print-meta-box span {
+      display: block;
+      font-size: 6.8pt;
+      font-weight: 700;
+      color: #5d756b;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .print-meta-box b {
+      display: block;
+      font-size: 8.5pt;
+      font-weight: 800;
+      color: #0f2c22;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .print-kpis {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .print-kpi {
+      background: #ffffff;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .print-kpi b {
+      display: block;
+      font-size: 13pt;
+      font-weight: 900;
+      line-height: 1.1;
+      color: #153B2E;
+    }
+
+    .print-kpi small {
+      display: block;
+      font-size: 6.8pt;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      margin-top: 2px;
+    }
+
+    .print-kpi.accent {
+      background: #f0f7f3;
+      border-color: #2F7D5B;
+    }
+
+    .print-kpi.accent b {
+      color: #2F7D5B;
+    }
+
+    .print-section-title {
+      font-size: 8.5pt;
+      font-weight: 800;
+      color: #153B2E;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: 10px 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .print-section-title::before {
+      content: "";
+      width: 4px;
+      height: 11px;
+      background: #2F7D5B;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* GRÁFICO GERAL EM BARRA HORIZONTAL TRICOLOR */
+    .print-dist-box {
+      background: #fdfefe;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .print-stacked-bar {
+      height: 14px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      background: #e5ece8;
+      width: 100%;
+      margin: 4px 0 6px;
+    }
+
+    .print-stacked-bar .seg-s {
+      background: #2F7D5B;
+      height: 100%;
+    }
+
+    .print-stacked-bar .seg-p {
+      background: #F47B20;
+      height: 100%;
+    }
+
+    .print-stacked-bar .seg-n {
+      background: #E6007E;
+      height: 100%;
+    }
+
+    .print-dist-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.2pt;
+      color: #333;
+    }
+
+    .print-dist-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    .print-dist-legend i {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .print-dist-legend i.s { background: #2F7D5B; }
+    .print-dist-legend i.p { background: #F47B20; }
+    .print-dist-legend i.n { background: #E6007E; }
+
+    /* DESTAQUES PEDAGÓGICOS (MAIOR DESENVOLVIMENTO & ATENÇÃO) */
+    .print-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .print-col-card {
+      background: #ffffff;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .print-col-card h4 {
+      margin: 0 0 6px;
+      font-size: 7.8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .print-col-card.good h4 { color: #1e5a41; }
+    .print-col-card.warn h4 { color: #c4400c; }
+
+    .print-item-mini {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 3px 0;
+      border-bottom: 1px solid #edf3ef;
+      font-size: 7pt;
+    }
+
+    .print-item-mini:last-child {
+      border: none;
+    }
+
+    .print-item-mini span {
+      flex: 1 1 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #222;
+      font-weight: 600;
+    }
+
+    .print-item-mini b {
+      flex: 0 0 auto;
+      font-weight: 800;
+      font-size: 7.2pt;
+    }
+
+    /* TABELA DE ESCOLAS / TURMAS NA FOLHA 1 */
+    .print-table-wrap {
+      width: 100%;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7pt;
+      text-align: left;
+    }
+
+    .print-table th {
+      background: #f1f6f3;
+      color: #173F31;
+      font-weight: 800;
+      font-size: 6.8pt;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 5px 6px;
+      border-bottom: 1px solid #d8e5df;
+    }
+
+    .print-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #edf3ef;
+      color: #222;
+    }
+
+    .print-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .print-table tr:nth-child(even) td {
+      background: #fafcfb;
+    }
+
+    .ptag {
+      display: inline-block;
+      padding: 1.5px 5px;
+      border-radius: 4px;
+      font-size: 6.2pt;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .ptag.s { background: #e3f2ea; color: #1e5a41; }
+    .ptag.w { background: #feede2; color: #b25306; }
+    .ptag.x { background: #fce4ee; color: #b0003f; }
+
+    /* TABELA DETALHADA DOS 15 INDICADORES NA FOLHA 2 */
+    .print-ind-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2pt;
+      margin-bottom: 10px;
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .print-ind-table th {
+      background: #f1f6f3;
+      color: #173F31;
+      font-weight: 800;
+      font-size: 6.8pt;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 5px 6px;
+      border-bottom: 1.5px solid #d8e5df;
+    }
+
+    .print-ind-table td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #edf3ef;
+      vertical-align: middle;
+    }
+
+    .print-ind-table tr:nth-child(even) td {
+      background: #fafcfb;
+    }
+
+    .print-ind-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mini-bar {
+      width: 58px;
+      height: 8px;
+      background: #edf3ef;
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .mini-bar .mb-s { background: #2F7D5B; height: 100%; }
+    .mini-bar .mb-p { background: #F47B20; height: 100%; }
+    .mini-bar .mb-n { background: #E6007E; height: 100%; }
+
+    /* QUADRO DE PARECER E ASSINATURAS */
+    .print-notes-box {
+      border: 1px solid #d8e5df;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fafcfb;
+      margin-bottom: 16px;
+    }
+
+    .print-notes-box h4 {
+      margin: 0 0 4px;
+      font-size: 7.5pt;
+      font-weight: 800;
+      color: #153B2E;
+      text-transform: uppercase;
+    }
+
+    .print-notes-box p {
+      margin: 0;
+      font-size: 6.8pt;
+      color: #555;
+      line-height: 1.3;
+    }
+
+    .print-signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .sig-line {
+      text-align: center;
+    }
+
+    .sig-line .line {
+      border-top: 1px solid #333;
+      margin-bottom: 4px;
+      width: 85%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .sig-line b {
+      display: block;
+      font-size: 7.5pt;
+      color: #111;
+      font-weight: 800;
+    }
+
+    .sig-line small {
+      display: block;
+      font-size: 6.8pt;
+      color: #555;
+    }
+
+    /* RODAPÉ DA PÁGINA IMPRESSA */
+    .print-page-footer {
+      border-top: 1px solid #e1ebe5;
+      padding-top: 6px;
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 6.5pt;
+      color: #777;
+    }
+
+    @media (max-width: 840px) {
+      .a4-sheet {
+        width: 100%;
+        min-height: auto;
+        padding: 16px 12px;
+      }
+      .print-meta-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .print-kpis {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .print-two-col {
+        grid-template-columns: 1fr;
+      }
+      .print-signatures {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+    }
+
+    /* ESTILOS REAIS DE IMPRESSÃO */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm 8mm 10mm;
+      }
+
+      body, html {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .top, .tabs, .yrbar, .hello, .print-toolbar, .noprint, #rf, #out, button {
+        display: none !important;
+      }
+
+      .wrap {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .print-stage {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      .a4-sheet {
+        width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+
+      .a4-sheet:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+
+      .print-official-header,
+      .print-kpis,
+      .print-dist-box,
+      .print-two-col,
+      .print-table-wrap,
+      .print-ind-table,
+      .print-signatures {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -1295,10 +1955,369 @@
     }
     /* ADMIN */
     function admin() {
-      const T = [["anos", "Ano letivo"], ["resumo", "Resumo"], ["etapas", "Etapas"], ["escolas", "Escolas"], ["turmas", "Turmas"], ["coords", "Coordenadores"], ["periodos", "Períodos"], ["inds", "Indicadores"]];
-      return `<div class="hello"><h2>Painel da Secretaria</h2><p>Acompanhe a rede e configure o que as escolas preenchem.</p></div><div class="tabs">${T.map(t => `<button class="${S.tab == t[0] ? "on" : ""}" onclick="go({tab:'${t[0]}',ed:null})">${t[1]}</button>`).join("")}</div>` + yBar() + ({ anos: aAnos, resumo: aResumo, etapas: aEtapas, escolas: aEscolas, turmas: aTurmas, coords: aCoords, periodos: aPeriodos, inds: aInds })[S.tab]()
+      const T = [["anos", "Ano letivo"], ["resumo", "Resumo"], ["impressao", "Impressão"], ["etapas", "Etapas"], ["escolas", "Escolas"], ["turmas", "Turmas"], ["coords", "Coordenadores"], ["periodos", "Períodos"], ["inds", "Indicadores"]];
+      return `<div class="hello"><h2>Painel da Secretaria</h2><p>Acompanhe a rede e configure o que as escolas preenchem.</p></div><div class="tabs">${T.map(t => `<button class="${S.tab == t[0] ? "on" : ""}" onclick="go({tab:'${t[0]}',ed:null})">${t[1]}</button>`).join("")}</div>` + yBar() + ({ anos: aAnos, resumo: aResumo, impressao: aImpressao, etapas: aEtapas, escolas: aEscolas, turmas: aTurmas, coords: aCoords, periodos: aPeriodos, inds: aInds })[S.tab]()
     }
-    function imprimirRelatorio() { window.print(); }
+    function imprimirRelatorio() { go({ tab: "impressao" }); }
+
+function aImpressao() {
+  const y = yr();
+  const p = S.fp;
+  const s = S.fs;
+  const l = S.fl;
+
+  const cl = D.classes.filter(c => c.yid == y && (!s || c.sid == s) && (!l || c.lid == l));
+  const st = stats(cl, p);
+  const tot = st.t[0] + st.t[1] + st.t[2];
+  const pSim = pct(st.t[0], tot);
+  const pParc = pct(st.t[1], tot);
+  const pNao = pct(st.t[2], tot);
+
+  const perNome = p ? (per(p)?.name || "Período") : "Todos os Períodos (Consolidado)";
+  const escNome = s ? (sch(s)?.name || "Escola") : ("Todas as Escolas Municipais (" + D.schools.length + " Unidades)");
+  const etaNome = l ? (lname(l) || "Etapa") : "Todas as Etapas";
+  const anoNome = yname(y);
+
+  const agora = new Date();
+  const dataStr = agora.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  const totalAlunos = cl.reduce((acc, c) => acc + (+c.total || 0), 0);
+  const pctPreenchidas = cl.length ? Math.round((st.f / cl.length) * 100) : 0;
+
+  const indList = D.inds.map((n, i) => {
+    const x = st.pr[n.id] || [0, 0, 0];
+    const sTot = x[0] + x[1] + x[2];
+    const simP = pct(x[0], sTot);
+    const parcP = pct(x[1], sTot);
+    const naoP = pct(x[2], sTot);
+    return { num: i + 1, id: n.id, text: n.text, x, sTot, simP, parcP, naoP };
+  });
+
+  const fortes = [...indList].filter(item => item.sTot > 0).sort((a, b) => b.simP - a.simP).slice(0, 3);
+  const atencao = [...indList].filter(item => item.sTot > 0).sort((a, b) => a.simP - b.simP).slice(0, 3);
+
+  const escolasTable = D.schools.map(sc => {
+    const clEsc = cl.filter(c => c.sid == sc.id);
+    const q = stats(clEsc, p);
+    const sTot = q.t[0] + q.t[1] + q.t[2];
+    const al = clEsc.reduce((acc, c) => acc + (+c.total || 0), 0);
+    return {
+      name: sc.name,
+      turmas: clEsc.length,
+      preenchidas: q.f,
+      parciais: q.parc,
+      alunos: al,
+      simPct: pct(q.t[0], sTot),
+      sTot
+    };
+  }).filter(item => s ? item.name === escNome : item.turmas > 0).sort((a, b) => b.simPct - a.simPct);
+
+  const turmasTable = cl.map(c => {
+    const q = stats([c], p);
+    const sTot = q.t[0] + q.t[1] + q.t[2];
+    const stCl = classStatus(c.id, p || (yPer(y)[0]?.id));
+    return {
+      name: c.name,
+      etapa: lname(c.lid),
+      alunos: c.total || 0,
+      status: stCl.status,
+      filled: stCl.filled,
+      simPct: pct(q.t[0], sTot),
+      sTot
+    };
+  }).sort((a, b) => b.simPct - a.simPct);
+
+  const headerHtml = (pageNum, pageTotal) => `
+    <div class="print-official-header">
+      <div class="poh-row">
+        <div class="poh-logo">
+          <img src="logo.png" alt="Lagoa da Canoa">
+        </div>
+        <div class="poh-divider"></div>
+        <div class="poh-text">
+          <div class="poh-sub">ESTADO DE ALAGOAS</div>
+          <div class="poh-sub">PREFEITURA MUNICIPAL DE LAGOA DA CANOA</div>
+          <div class="poh-main">SECRETARIA MUNICIPAL DE EDUCAÇÃO</div>
+          <div class="poh-sub">GERÊNCIA DE ENSINO</div>
+        </div>
+        <div class="poh-badge">
+          PÁGINA ${pageNum} DE ${pageTotal}
+        </div>
+      </div>
+      <div class="poh-stripe">
+        <div class="poh-g"></div>
+        <div class="poh-o"></div>
+        <div class="poh-p"></div>
+      </div>
+    </div>
+  `;
+
+  const toolbarHtml = `
+    <div class="print-toolbar noprint">
+      <div class="pt-filters">
+        <div class="pt-filter-group">
+          <label>Ano Letivo</label>
+          <select id="pt_yr" onchange="setYr(this.value)">
+            ${D.years.map(yObj => `<option value="${yObj.id}" ${yObj.id == yr() ? "selected" : ""}>${esc(yObj.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="pt-filter-group">
+          <label>Período</label>
+          <select onchange="go({fp:this.value})">
+            <option value="">Todos os períodos</option>
+            ${yPer(yr()).map(pObj => `<option value="${pObj.id}" ${S.fp == pObj.id ? "selected" : ""}>${esc(pObj.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="pt-filter-group">
+          <label>Escola</label>
+          <select onchange="go({fs:this.value})">
+            <option value="">Todas as escolas (${D.schools.length})</option>
+            ${D.schools.map(sObj => `<option value="${sObj.id}" ${S.fs == sObj.id ? "selected" : ""}>${esc(sObj.name)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="pt-filter-group">
+          <label>Etapa</label>
+          <select onchange="go({fl:this.value})">
+            <option value="">Todas as etapas</option>
+            ${D.levels.map(lObj => `<option value="${lObj.id}" ${S.fl == lObj.id ? "selected" : ""}>${esc(lObj.name)}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div class="pt-actions">
+        <button class="ghost" onclick="go({tab:'resumo'})">← Voltar ao Resumo</button>
+        <button class="ghost" onclick="window.open('impressao.html?year=' + yr() + '&fp=' + (S.fp || '') + '&fs=' + (S.fs || '') + '&fl=' + (S.fl || ''), '_blank')">↗ Nova Aba</button>
+        <button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+      </div>
+    </div>
+  `;
+
+  const folha1 = `
+    <div class="a4-sheet">
+      ${headerHtml(1, 2)}
+
+      <div class="print-doc-title">
+        <h2>Relatório de Monitoramento da Educação Infantil</h2>
+        <p>Acompanhamento Sistemático do Desenvolvimento e Aprendizagem na Primeira Infância</p>
+      </div>
+
+      <div class="print-meta-grid">
+        <div class="print-meta-box">
+          <span>Ano Letivo</span>
+          <b>${esc(anoNome)}</b>
+        </div>
+        <div class="print-meta-box">
+          <span>Período Avaliado</span>
+          <b>${esc(perNome)}</b>
+        </div>
+        <div class="print-meta-box">
+          <span>Unidade Escolar</span>
+          <b title="${esc(escNome)}">${esc(escNome)}</b>
+        </div>
+        <div class="print-meta-box">
+          <span>Data de Emissão</span>
+          <b>${dataStr} às ${horaStr}</b>
+        </div>
+      </div>
+
+      <div class="print-kpis">
+        <div class="print-kpi">
+          <b>${s ? 1 : D.schools.length}</b>
+          <small>${s ? "Escola Selecionada" : "Escolas Monitoradas"}</small>
+        </div>
+        <div class="print-kpi">
+          <b>${cl.length}</b>
+          <small>Turmas no Escopo</small>
+        </div>
+        <div class="print-kpi">
+          <b>${totalAlunos}</b>
+          <small>Alunos Atendidos</small>
+        </div>
+        <div class="print-kpi">
+          <b>${st.f}/${cl.length} <span style="font-size:8.5pt;font-weight:700;color:#2F7D5B">(${pctPreenchidas}%)</span></b>
+          <small>Turmas Preenchidas</small>
+        </div>
+        <div class="print-kpi accent">
+          <b>${pSim}%</b>
+          <small>Taxa "Sim" (Pleno)</small>
+        </div>
+      </div>
+
+      <div class="print-section-title">Distribuição Geral das Respostas</div>
+      <div class="print-dist-box">
+        ${tot ? `
+          <div class="print-stacked-bar">
+            <div class="seg-s" style="width:${pSim}%" title="Sim: ${st.t[0]} (${pSim}%)"></div>
+            <div class="seg-p" style="width:${pParc}%" title="Parcial: ${st.t[1]} (${pParc}%)"></div>
+            <div class="seg-n" style="width:${pNao}%" title="Não: ${st.t[2]} (${pNao}%)"></div>
+          </div>
+          <div class="print-dist-legend">
+            <span><i class="s"></i> <b>Sim (Pleno Desenvolvimento):</b> ${st.t[0]} (${pSim}%)</span>
+            <span><i class="p"></i> <b>Parcial (Em Construção):</b> ${st.t[1]} (${pParc}%)</span>
+            <span><i class="n"></i> <b>Não (Atenção / Inicial):</b> ${st.t[2]} (${pNao}%)</span>
+          </div>
+        ` : `
+          <p style="text-align:center;color:#666;font-size:7.5pt;margin:4px 0">Nenhum dado registrado para este filtro.</p>
+        `}
+      </div>
+
+      <div class="print-two-col">
+        <div class="print-col-card good">
+          <h4>✓ Maior Desenvolvimento (Potencialidades)</h4>
+          ${fortes.length ? fortes.map(f => `
+            <div class="print-item-mini">
+              <span><b>${f.num}.</b> ${esc(f.text)}</span>
+              <b style="color:#2F7D5B">${f.simP}%</b>
+            </div>
+          `).join("") : '<p style="color:#666;font-size:7pt;margin:2px 0">Sem avaliações registradas.</p>'}
+        </div>
+        <div class="print-col-card warn">
+          <h4>⚠ Atenção Prioritária (Necessidade de Apoio)</h4>
+          ${atencao.length ? atencao.map(a => `
+            <div class="print-item-mini">
+              <span><b>${a.num}.</b> ${esc(a.text)}</span>
+              <b style="color:#b0003f">${a.simP}%</b>
+            </div>
+          `).join("") : '<p style="color:#666;font-size:7pt;margin:2px 0">Sem avaliações registradas.</p>'}
+        </div>
+      </div>
+
+      <div class="print-section-title">${s ? "Demonstrativo por Turma da Escola" : "Demonstrativo por Unidade Escolar"}</div>
+      <div class="print-table-wrap">
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th>${s ? "Turma" : "Unidade Escolar"}</th>
+              <th>${s ? "Etapa" : "Turmas"}</th>
+              <th>Alunos</th>
+              <th>Preenchimento</th>
+              <th>Índice "Sim"</th>
+              <th>Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${s ? (
+              turmasTable.map(t => {
+                const tagClass = t.status === "completa" ? "s" : (t.status === "parcial" ? "w" : "x");
+                const tagLabel = t.status === "completa" ? "Completa" : (t.status === "parcial" ? ("Parcial (" + t.filled + ")") : "Pendente");
+                return `<tr>
+                  <td><b>${esc(t.name)}</b></td>
+                  <td>${esc(t.etapa)}</td>
+                  <td>${t.alunos}</td>
+                  <td><span class="ptag ${tagClass}">${tagLabel}</span></td>
+                  <td><b>${t.temDados ? t.simPct + "%" : "-"}</b></td>
+                  <td>${t.temDados ? (t.simPct >= 70 ? '<span class="ptag s">Adequado</span>' : (t.simPct >= 50 ? '<span class="ptag w">Atenção</span>' : '<span class="ptag x">Prioritário</span>')) : '<span style="color:#888">-</span>'}</td>
+                </tr>`;
+              }).join("") || '<tr><td colspan="6" style="text-align:center;padding:8px">Nenhuma turma cadastrada.</td></tr>'
+            ) : (
+              escolasTable.slice(0, 10).map(sc => {
+                const pPct = sc.turmas ? Math.round((sc.preenchidas / sc.turmas) * 100) : 0;
+                const tagClass = sc.preenchidas === sc.turmas && sc.turmas > 0 ? "s" : (sc.preenchidas > 0 || sc.parciais > 0 ? "w" : "x");
+                const sit = sc.sTot > 0 ? (sc.simPct >= 70 ? '<span class="ptag s">Adequado</span>' : (sc.simPct >= 50 ? '<span class="ptag w">Atenção</span>' : '<span class="ptag x">Prioritário</span>')) : '<span style="color:#888">-</span>';
+                return `<tr>
+                  <td><b>${esc(sc.name)}</b></td>
+                  <td>${sc.turmas} turmas</td>
+                  <td>${sc.alunos}</td>
+                  <td><span class="ptag ${tagClass}">${sc.preenchidas}/${sc.turmas} (${pPct}%)</span></td>
+                  <td><b>${sc.sTot > 0 ? sc.simPct + "%" : "-"}</b></td>
+                  <td>${sit}</td>
+                </tr>`;
+              }).join("") || '<tr><td colspan="6" style="text-align:center;padding:8px">Nenhuma escola com turmas cadastradas.</td></tr>'
+            )}
+          </tbody>
+        </table>
+      </div>
+      ${!s && escolasTable.length > 10 ? `<p style="font-size:6.5pt;color:#777;margin:-4px 0 6px;text-align:right">Exibindo as 10 principais unidades escolares. Para detalhar por escola, selecione o filtro específico no topo.</p>` : ""}
+
+      <div class="print-page-footer">
+        <span>Sistema de Monitoramento da Educação Infantil · Prefeitura Municipal de Lagoa da Canoa - AL</span>
+        <span>Página 1 de 2</span>
+      </div>
+    </div>
+  `;
+
+  const folha2 = `
+    <div class="a4-sheet">
+      ${headerHtml(2, 2)}
+
+      <div class="print-doc-title">
+        <h2>Matriz Analítica de Desenvolvimento por Indicador</h2>
+        <p>Avaliação dos 15 Critérios Pedagógicos de Aprendizagem (Campos de Experiências - BNCC)</p>
+      </div>
+
+      <table class="print-ind-table">
+        <thead>
+          <tr>
+            <th style="width:24px;text-align:center">Nº</th>
+            <th>Indicador de Aprendizagem e Desenvolvimento</th>
+            <th style="width:52px;text-align:center">Sim</th>
+            <th style="width:52px;text-align:center">Parcial</th>
+            <th style="width:52px;text-align:center">Não</th>
+            <th style="width:68px;text-align:center">Distribuição</th>
+            <th style="width:64px;text-align:center">Diagnóstico</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${indList.map(item => {
+            const sit = item.sTot > 0 ? (
+              item.simP >= 70
+                ? '<span class="ptag s">Adequado</span>'
+                : (item.simP >= 50
+                  ? '<span class="ptag w">Atenção</span>'
+                  : '<span class="ptag x">Prioritário</span>')
+            ) : '<span style="color:#888;font-size:6.5pt">Sem dados</span>';
+
+            const barVisual = item.sTot > 0 ? `
+              <div class="mini-bar" title="Sim: ${item.x[0]} (${item.simP}%) | Parcial: ${item.x[1]} (${item.parcP}%) | Não: ${item.x[2]} (${item.naoP}%)">
+                <div class="mb-s" style="width:${item.simP}%"></div>
+                <div class="mb-p" style="width:${item.parcP}%"></div>
+                <div class="mb-n" style="width:${item.naoP}%"></div>
+              </div>
+            ` : '<div style="font-size:6.5pt;color:#aaa">-</div>';
+
+            return `<tr>
+              <td style="text-align:center;font-weight:800;color:#153B2E">${item.num}</td>
+              <td><b>${esc(item.text)}</b></td>
+              <td style="text-align:center">${item.sTot > 0 ? `<b>${item.x[0]}</b> <span style="font-size:6pt;color:#2F7D5B">(${item.simP}%)</span>` : "-"}</td>
+              <td style="text-align:center">${item.sTot > 0 ? `<b>${item.x[1]}</b> <span style="font-size:6pt;color:#F47B20">(${item.parcP}%)</span>` : "-"}</td>
+              <td style="text-align:center">${item.sTot > 0 ? `<b>${item.x[2]}</b> <span style="font-size:6pt;color:#E6007E">(${item.naoP}%)</span>` : "-"}</td>
+              <td style="text-align:center">${barVisual}</td>
+              <td style="text-align:center">${sit}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+
+      <div class="print-notes-box">
+        <h4>Encaminhamentos e Orientações Pedagógicas</h4>
+        <p>
+          Este relatório serve como instrumento diagnóstico para reorientação do planejamento pedagógico das unidades de Educação Infantil do Município de Lagoa da Canoa. Recomenda-se aos coordenadores pedagógicos e docentes a proposição de intervenções lúdicas e intencionais direcionadas especialmente aos critérios classificados como "Prioritário" e "Atenção", fortalecendo os direitos de aprendizagem estabelecidos na BNCC.
+        </p>
+      </div>
+
+      <div class="print-signatures">
+        <div class="sig-line">
+          <div class="line"></div>
+          <b>Coordenação Pedagógica / Direção Escolar</b>
+          <small>Responsável pela Validação dos Registros</small>
+        </div>
+        <div class="sig-line">
+          <div class="line"></div>
+          <b>Secretaria Municipal de Educação</b>
+          <small>Gerência de Ensino da Educação Infantil</small>
+        </div>
+      </div>
+
+      <div class="print-page-footer">
+        <span>Sistema de Monitoramento da Educação Infantil · Prefeitura Municipal de Lagoa da Canoa - AL</span>
+        <span>Página 2 de 2</span>
+      </div>
+    </div>
+  `;
+
+  return toolbarHtml + `<div class="print-stage">${folha1}${folha2}</div>`;
+}
+
 function exportarCSV() {
   const y = yr(), p = S.fp;
   const cl = D.classes.filter(c => c.yid == y && (!S.fs || c.sid == S.fs) && (!S.fl || c.lid == S.fl));
