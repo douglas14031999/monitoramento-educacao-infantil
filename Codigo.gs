@@ -516,13 +516,18 @@ function opRec_(ctx, op) {
   const r = op.r || {}, novas = [], ruins = [];
   const tz = Session.getScriptTimeZone() || 'America/Maceio';
   const agora = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss');
+  const totPeriodo = Number(op.total) || c.total;
   tbl_('inds').rows.forEach((ind, i) => {
     const v = Array.isArray(r[ind.id]) ? r[ind.id] : [0, 0, 0];
     const n = [0, 1, 2].map(j => Math.max(0, Math.floor(Number(v[j]) || 0)));
-    if (c.total && n[0] + n[1] + n[2] > c.total) ruins.push(i + 1);
+    if (totPeriodo && n[0] + n[1] + n[2] > totPeriodo) ruins.push(i + 1);
     novas.push({ cid: c.id, pid: p.id, iid: ind.id, a: n[0], b: n[1], c: n[2], at: agora, by: q.name });
   });
-  if (ruins.length) falha_('A soma passa do total de ' + c.total + ' alunos nos critérios: ' + ruins.join(', ') + '.');
+  if (ruins.length) falha_('A soma passa do total de ' + totPeriodo + ' alunos nos critérios: ' + ruins.join(', ') + '.');
+  if (op.total && Number(op.total) > (c.total || 0)) {
+    c.total = Number(op.total);
+    sujar_('classes');
+  }
   removerRecs_(x => x.cid === c.id && x.pid === p.id);
   const t = tbl_('recs'); novas.forEach(x => t.rows.push(x)); t.dirty = true;
 }

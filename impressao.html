@@ -1689,6 +1689,44 @@
       return { status: "pendente", filled: 0, total };
     }
 
+        function getTurmaTotal(c, pid) {
+      if (!c) return 0;
+      if (pid) {
+        if (D.rec && D.rec[c.id] && D.rec[c.id][pid]) {
+          const periodRec = D.rec[c.id][pid];
+          for (const iid in periodRec) {
+            const v = periodRec[iid];
+            if (Array.isArray(v)) {
+              const s = (+v[0] || 0) + (+v[1] || 0) + (+v[2] || 0);
+              if (s > 0) return s;
+            }
+          }
+        }
+        if (c.totals && c.totals[pid]) {
+          return +c.totals[pid];
+        }
+        return +c.total || 0;
+      }
+      const ps = yPer(yr());
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const pId = ps[i].id;
+        if (D.rec && D.rec[c.id] && D.rec[c.id][pId]) {
+          const periodRec = D.rec[c.id][pId];
+          for (const iid in periodRec) {
+            const v = periodRec[iid];
+            if (Array.isArray(v)) {
+              const s = (+v[0] || 0) + (+v[1] || 0) + (+v[2] || 0);
+              if (s > 0) return s;
+            }
+          }
+        }
+        if (c.totals && c.totals[pId]) {
+          return +c.totals[pId];
+        }
+      }
+      return +c.total || 0;
+    }
+
     function turmaStatusGeral(cid, pid) {
       if (pid) return classStatus(cid, pid);
       const ps = yPer(yr());
@@ -1771,7 +1809,7 @@
       const dataStr = agora.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
       const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-      const totalAlunos = cl.reduce((acc, c) => acc + (+c.total || 0), 0);
+      const totalAlunos = cl.reduce((acc, c) => acc + getTurmaTotal(c, p), 0);
       const pctPreenchidas = cl.length ? Math.round((st.f / cl.length) * 100) : 0;
 
       const indList = D.inds.map((n, i) => {
@@ -1797,7 +1835,7 @@
         const clEsc = cl.filter(c => c.sid == sc.id);
         const q = stats(clEsc, p);
         const sTot = q.t[0] + q.t[1] + q.t[2];
-        const al = clEsc.reduce((acc, c) => acc + (+c.total || 0), 0);
+        const al = clEsc.reduce((acc, c) => acc + getTurmaTotal(c, p), 0);
         return {
           name: sc.name,
           turmas: clEsc.length,
@@ -1816,7 +1854,7 @@
         return {
           name: c.name,
           etapa: lname(c.lid),
-          alunos: c.total || 0,
+          alunos: getTurmaTotal(c, p),
           status: stCl.status,
           filled: stCl.filled,
           simPct: pct(q.t[0], sTot),
