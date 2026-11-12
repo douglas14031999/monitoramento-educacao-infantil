@@ -1668,8 +1668,6 @@
         <p>Informe seu CPF para acessar a plataforma.</p><label for="cpf">CPF</label>
         <div class="field"><input id="cpf" class="big" inputmode="numeric" autocomplete="off"
             placeholder="000.000.000-00" maxlength="14"><button class="btn" id="go" type="button">Entrar</button></div>
-        <div id="pwbox" hidden style="margin-top:14px"><label for="pw">Senha do administrador</label><input id="pw"
-            type="password" autocomplete="current-password"></div>
         <div id="msg" role="alert"></div>
       </div>
     </main>
@@ -1703,23 +1701,6 @@
     let autoTimer = null, autoBusy = false;
     let S = S0();
     let currentSessionId = 1;
-    const ADMIN_CPFS_KEY = "semed_infantil_admin_cpfs";
-    function getAdminCpfs() {
-      try {
-        const a = JSON.parse(localStorage.getItem(ADMIN_CPFS_KEY) || "[]");
-        return Array.isArray(a) ? a : [];
-      } catch (e) { return []; }
-    }
-    function saveAdminCpf(cpf) {
-      if (!cpf) return;
-      const clean = String(cpf).replace(/\D/g, "");
-      if (clean.length !== 11) return;
-      const list = getAdminCpfs();
-      if (!list.includes(clean)) {
-        list.push(clean);
-        try { localStorage.setItem(ADMIN_CPFS_KEY, JSON.stringify(list)); } catch (e) { }
-      }
-    }
     let _warmed = false;
     function warmServer() {
       if (_warmed) return;
@@ -1734,9 +1715,7 @@
         const r = JSON.parse(cached);
         if (r && r.data) {
           D = Object.assign(vazio(), r.data);
-      if (Array.isArray(D.admins)) D.admins.forEach(saveAdminCpf);
-      if (r.role === "admin" && r.cpf) saveAdminCpf(r.cpf);
-          if (r.role == "admin") {
+      if (r.role == "admin") {
             S.user = { role: "admin" };
             S.tab = "resumo";
             S.yr = D.cur;
@@ -1855,10 +1834,8 @@
       } catch (e) { }
       D = vazio();
       S = S0();
-      const cpfEl = $("#cpf"), pwEl = $("#pw"), pwBox = $("#pwbox"), msgEl = $("#msg");
+      const cpfEl = $("#cpf"), msgEl = $("#msg");
       if (cpfEl) cpfEl.value = "";
-      if (pwEl) pwEl.value = "";
-      if (pwBox) pwBox.hidden = true;
       if (msgEl) msgEl.innerHTML = msg ? `<div class="err">${esc(msg)}</div>` : "";
       render();
       if (t) {
@@ -1964,50 +1941,30 @@
     $("#cpf").oninput = e => {
       e.target.value = mask(e.target.value);
       const clean = e.target.value.replace(/\D/g, "");
-      if (clean.length === 11 && getAdminCpfs().includes(clean)) {
-        $("#pwbox").hidden = false;
-        $("#pw").focus();
+      if (clean.length === 11 && cpfOk(clean)) {
+        login();
       }
     };
     $("#cpf").addEventListener("focus", warmServer, { once: true });
     $("#cpf").addEventListener("touchstart", warmServer, { once: true });
     $("#cpf").onkeydown = e => { if (e.key == "Enter") login() };
-    $("#pw").onkeydown = e => { if (e.key == "Enter") login() };
     $("#go").onclick = login;
-    const _tPw = $("#toggle-pw");
-    if (_tPw) {
-      _tPw.onclick = () => {
-        const b = $("#pwbox");
-        b.hidden = !b.hidden;
-        if (!b.hidden) $("#pw").focus();
-      };
-    }
     $("#out").onclick = () => { reset(""); };
     $("#rf").onclick = async () => { const b = $("#rf"), ico = $("#rf-ico"); b.disabled = true; if (ico) ico.classList.add("spin"); await chain; await recarregar(); b.disabled = false; if (ico) ico.classList.remove("spin") };
     async function login() {
       const c = $("#cpf").value.replace(/\D/g, ""), m = t => $("#msg").innerHTML = `<div class="err">${esc(t)}</div>`, b = $("#go");
       if (c.length != 11) return m("Digite os 11 números do CPF.");
       if (!cpfOk(c)) return m("CPF inválido. Confira os números.");
+      if (b.disabled) return;
       b.disabled = true;
       b.innerHTML = '<span class="spin" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;vertical-align:-2px;margin-right:6px"></span>Entrando…';
       $("#msg").innerHTML = "";
-      const pass = $("#pwbox").hidden ? "" : $("#pw").value;
-      const r = await api({ a: "login", cpf: c, pass });
+      const r = await api({ a: "login", cpf: c, pass: "" });
       b.disabled = false;
       b.textContent = "Entrar";
-      if (r.needPass) {
-        saveAdminCpf(c);
-        $("#pwbox").hidden = false;
-        $("#pw").focus();
-        return m(r.err || "Informe a senha do administrador.");
-      }
       if (!r.ok) return m(r.err || "Não foi possível entrar.");
-      if (r.role === "admin") saveAdminCpf(c);
       currentSessionId++;
       setTok(r.token);
-      try { localStorage.setItem(CR, JSON.stringify({ cpf: c, pass })) } catch (e) { }
-      $("#pw").value = "";
-      $("#pwbox").hidden = true;
       entrar(r);
     }
     function classStatus(cid, pid) {
