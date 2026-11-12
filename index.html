@@ -1938,13 +1938,7 @@
     const go = o => { Object.assign(S, o); render() };
     const yname = id => D.years.find(y => y.id == id)?.name || "—", yr = () => D.years.some(y => y.id == S.yr) ? S.yr : D.cur, yCl = y => D.classes.filter(c => c.yid == y), yPer = y => D.periods.filter(p => p.yid == y);
     const openP = () => D.periods.filter(p => p.open && p.yid == D.cur);
-    $("#cpf").oninput = e => {
-      e.target.value = mask(e.target.value);
-      const clean = e.target.value.replace(/\D/g, "");
-      if (clean.length === 11 && cpfOk(clean)) {
-        login();
-      }
-    };
+    $("#cpf").oninput = e => { e.target.value = mask(e.target.value); };
     $("#cpf").addEventListener("focus", warmServer, { once: true });
     $("#cpf").addEventListener("touchstart", warmServer, { once: true });
     $("#cpf").onkeydown = e => { if (e.key == "Enter") login() };
