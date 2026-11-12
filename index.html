@@ -1606,7 +1606,7 @@
         print-color-adjust: exact !important;
       }
 
-      .top, .tabs, .yrbar, .hello, .print-toolbar, .noprint, #rf, #out, button {
+      .band, .top, .tabs, .yrbar, .hello, .print-toolbar, .noprint, #rf, #out, button {
         display: none !important;
       }
 
@@ -1960,10 +1960,16 @@
     }
     /* ADMIN */
     function admin() {
-      const T = [["anos", "Ano letivo"], ["resumo", "Resumo"], ["impressao", "Impressão"], ["etapas", "Etapas"], ["escolas", "Escolas"], ["turmas", "Turmas"], ["coords", "Coordenadores"], ["periodos", "Períodos"], ["inds", "Indicadores"]];
+      const T = [["anos", "Ano letivo"], ["resumo", "Resumo"], ["etapas", "Etapas"], ["escolas", "Escolas"], ["turmas", "Turmas"], ["coords", "Coordenadores"], ["periodos", "Períodos"], ["inds", "Indicadores"]];
       return `<div class="hello"><h2>Painel da Secretaria</h2><p>Acompanhe a rede e configure o que as escolas preenchem.</p></div><div class="tabs">${T.map(t => `<button class="${S.tab == t[0] ? "on" : ""}" onclick="go({tab:'${t[0]}',ed:null})">${t[1]}</button>`).join("")}</div>` + yBar() + ({ anos: aAnos, resumo: aResumo, impressao: aImpressao, etapas: aEtapas, escolas: aEscolas, turmas: aTurmas, coords: aCoords, periodos: aPeriodos, inds: aInds })[S.tab]()
     }
-    function imprimirRelatorio() { go({ tab: "impressao" }); }
+    function imprimirRelatorio() {
+      const y = yr() || "";
+      const p = S.fp || "";
+      const s = S.fs || "";
+      const l = S.fl || "";
+      window.location.href = "impressao.html?year=" + encodeURIComponent(y) + "&fp=" + encodeURIComponent(p) + "&fs=" + encodeURIComponent(s) + "&fl=" + encodeURIComponent(l);
+    }
 
 function aImpressao() {
   const y = yr();
@@ -2389,7 +2395,7 @@ function aResumo() {
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
       <h3 style="margin:0">Filtros de análise</h3>
       <div style="display:flex;gap:8px">
-        <button class="ghost" style="height:34px;padding:0 12px;font-size:.82rem" onclick="imprimirRelatorio()">Imprimir relatório</button>
+        <button class="ghost" style="height:34px;padding:0 12px;font-size:.82rem;display:inline-flex;align-items:center;gap:6px" onclick="imprimirRelatorio()"><svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>Imprimir relatório</button>
         <button class="ghost" style="height:34px;padding:0 12px;font-size:.82rem" onclick="exportarCSV()">Exportar CSV</button>
       </div>
     </div>
@@ -2722,7 +2728,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       if (!s) return `${back}<div class="hello"><h2>Escola não encontrada</h2></div>`;
       if (!op.length) return `${back}<div class="hello"><h2>${esc(s.name)}</h2></div><div class="card empty">Nenhum período está aberto para preenchimento no momento.<br>Aguarde a liberação pela Secretaria de Educação.</div>`;
       if (!op.find(p => p.id == S.pid)) S.pid = op[0].id;
-      if (!S.cid) { const cl = D.classes.filter(c => c.sid == S.sid && c.yid == D.cur); return `${back}<div class="hello"><h2>${esc(s.name)}</h2><p>Escolha o período e depois a turma para preencher os indicadores.</p></div><div class="pills">${op.map(p => `<button class="${p.id == S.pid ? "on" : ""}" onclick="go({pid:'${p.id}'})">${esc(p.name)}</button>`).join("")}</div><div class="list">${cl.map(c => { const stCl = classStatus(c.id, S.pid);
+      if (!S.cid) { const cl = D.classes.filter(c => c.sid == S.sid && c.yid == D.cur); return `${back}<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px"><div class="hello" style="margin:0"><h2>${esc(s.name)}</h2><p style="margin:4px 0 0">Escolha o período e depois a turma para preencher os indicadores.</p></div><button class="ghost" style="height:36px;font-size:.82rem" onclick="window.open('impressao.html?year=' + D.cur + '&fs=' + S.sid + '&fp=' + (S.pid || ''), '_blank')"><svg style="width:14px;height:14px;margin-right:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>Imprimir relatório da escola</button></div><div class="pills">${op.map(p => `<button class="${p.id == S.pid ? "on" : ""}" onclick="go({pid:'${p.id}'})">${esc(p.name)}</button>`).join("")}</div><div class="list">${cl.map(c => { const stCl = classStatus(c.id, S.pid);
           const badgeHtml = stCl.status == "completa"
             ? '<span class="badge">✓ Preenchida</span>'
             : (stCl.status == "parcial"
@@ -2736,7 +2742,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
         : (stCl.status == "parcial"
           ? '<span class="badge w">● Preenchimento parcial: ' + stCl.filled + ' de ' + stCl.total + ' critérios preenchidos</span>'
           : '<span class="badge x">Pendente: nenhum critério preenchido ainda</span>');
-      return `<button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button><div class="hello"><h2>${esc(c.name)} · ${esc(lname(c.lid))}</h2><p>${esc(s.name)} · ${esc(per(S.pid)?.name || "")} · ${c.total || "-"} alunos. Informe, em cada critério, quantos alunos se enquadram em cada resposta.</p><div style="margin-top:6px">${progMsg}</div></div>` + `<div class="card">${D.inds.map((n, i) => { const x = r[n.id] || ["", "", ""]; return `<div class="ind"><span class="num">${i + 1}</span><b style="font-weight:600">${esc(n.text)}</b><div class="ins"><div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}"></div><div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}"></div><div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}"></div></div></div>` }).join("")}<div id="fe"></div><button class="btn" id="sf" onclick="saveForm()">Salvar preenchimento</button><span class="ok" id="fo"></span></div>`
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button><button class="ghost" style="height:34px;font-size:.82rem" onclick="window.open('impressao.html?year=' + D.cur + '&fs=' + S.sid + '&fp=' + (S.pid || ''), '_blank')"><svg style="width:14px;height:14px;margin-right:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>Imprimir relatório</button></div><div class="hello"><h2>${esc(c.name)} · ${esc(lname(c.lid))}</h2><p>${esc(s.name)} · ${esc(per(S.pid)?.name || "")} · ${c.total || "-"} alunos. Informe, em cada critério, quantos alunos se enquadram em cada resposta.</p><div style="margin-top:6px">${progMsg}</div></div>` + `<div class="card">${D.inds.map((n, i) => { const x = r[n.id] || ["", "", ""]; return `<div class="ind"><span class="num">${i + 1}</span><b style="font-weight:600">${esc(n.text)}</b><div class="ins"><div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}"></div><div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}"></div><div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}"></div></div></div>` }).join("")}<div id="fe"></div><button class="btn" id="sf" onclick="saveForm()">Salvar preenchimento</button><span class="ok" id="fo"></span></div>`
     }
     async function saveForm() {
       const r = {}; D.inds.forEach(i => r[i.id] = [0, 0, 0]); document.querySelectorAll(".ins input").forEach(e => r[e.dataset.i][e.dataset.j] = Math.max(0, +e.value || 0));

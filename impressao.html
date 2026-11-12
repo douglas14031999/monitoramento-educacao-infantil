@@ -1597,7 +1597,7 @@
         print-color-adjust: exact !important;
       }
 
-      .top, .tabs, .yrbar, .hello, .print-toolbar, .noprint, #rf, #out, button {
+      .band, .top, .tabs, .yrbar, .hello, .print-toolbar, .noprint, #rf, #out, button {
         display: none !important;
       }
 
@@ -1642,13 +1642,108 @@
     }
 
   
+
+    /* ===== PAINEL DE FILTROS DA PÁGINA DE RELATÓRIO ===== */
+    .filter-panel {
+      background: var(--sf);
+      border: 1.5px solid var(--ln);
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 10px 30px -22px rgba(23, 63, 49, .35);
+      margin-bottom: 22px;
+    }
+
+    .fp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--ln);
+      margin-bottom: 14px;
+    }
+
+    .fp-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .fp-title h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .fp-title p {
+      margin: 2px 0 0;
+      font-size: .82rem;
+      color: var(--mut);
+    }
+
+    .fp-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .fp-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .fp-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .fp-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fp-field label {
+      display: block;
+      font-size: .76rem;
+      font-weight: 700;
+      color: var(--mut);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+
+    .fp-field select {
+      width: 100%;
+      height: 42px;
+      border-radius: 10px;
+      border: 1.5px solid var(--ln);
+      background: var(--bg);
+      padding: 0 12px;
+      font-weight: 600;
+      font-size: .88rem;
+      color: var(--ink);
+      transition: .15s;
+    }
+
+    .fp-field select:focus {
+      border-color: var(--g);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(47, 125, 91, .15);
+    }
+
   </style>
 </head>
 <body style="background:#edf2f0;min-height:100vh;padding:0;margin:0">
 
   <div id="print-root">
-    <div style="text-align:center;padding:40px;color:var(--mut)">
-      <div class="spin" style="width:24px;height:24px;border:3px solid var(--ln);border-top-color:var(--g);border-radius:50%;margin:0 auto 12px"></div>
+    <div style="text-align:center;padding:50px 20px;color:var(--mut)">
+      <div class="spin" style="width:26px;height:26px;border:3px solid var(--ln);border-top-color:var(--g);border-radius:50%;margin:0 auto 14px"></div>
       Carregando relatório para impressão...
     </div>
   </div>
@@ -1779,11 +1874,12 @@
         };
       }).sort((a, b) => b.simPct - a.simPct);
 
+      // Cabeçalho oficial com ldc.png e SEM barra colorida superior
       const headerHtml = (pageNum, pageTotal) => `
         <div class="print-official-header">
           <div class="poh-row">
             <div class="poh-logo">
-              <img src="logo.png" alt="Lagoa da Canoa" onerror="this.onerror=null;this.src='favicon.png'">
+              <img src="ldc.png" alt="Prefeitura de Lagoa da Canoa" style="height:56px;width:auto;display:block" onerror="this.onerror=null;this.src='logo.png'">
             </div>
             <div class="poh-divider"></div>
             <div class="poh-text">
@@ -1804,41 +1900,63 @@
         </div>
       `;
 
+      // Barra de ferramentas aprimorada no padrão visual do sistema com ícones SVG
       const toolbarHtml = `
-        <div class="wrap noprint" style="padding-bottom:0">
-          <div class="print-toolbar">
-            <div class="pt-filters">
-              <div class="pt-filter-group">
-                <label>Ano Letivo</label>
+        <div class="wrap noprint" style="padding-top:20px;padding-bottom:10px">
+          <div class="filter-panel">
+            <div class="fp-header">
+              <div class="fp-title">
+                <svg style="width:20px;height:20px;color:var(--g)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <div>
+                  <h3>Filtros do Relatório</h3>
+                  <p>Personalize os dados e o escopo de análise para visualização e impressão</p>
+                </div>
+              </div>
+              <div class="fp-actions">
+                <a href="index.html" class="ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+                  <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Voltar ao Sistema
+                </a>
+                <button class="btn" onclick="window.print()" style="display:inline-flex;align-items:center;gap:8px">
+                  <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  Imprimir / Salvar PDF
+                </button>
+              </div>
+            </div>
+            <div class="fp-grid">
+              <div class="fp-field">
+                <label for="pt_yr">Ano Letivo</label>
                 <select id="pt_yr" onchange="setYr(this.value)">
                   ${D.years.map(yObj => `<option value="${yObj.id}" ${yObj.id == yr() ? "selected" : ""}>${esc(yObj.name)}</option>`).join("")}
                 </select>
               </div>
-              <div class="pt-filter-group">
-                <label>Período</label>
-                <select onchange="go({fp:this.value})">
+              <div class="fp-field">
+                <label for="pt_fp">Período de Avaliação</label>
+                <select id="pt_fp" onchange="go({fp:this.value})">
                   <option value="">Todos os períodos</option>
                   ${yPer(yr()).map(pObj => `<option value="${pObj.id}" ${S.fp == pObj.id ? "selected" : ""}>${esc(pObj.name)}</option>`).join("")}
                 </select>
               </div>
-              <div class="pt-filter-group">
-                <label>Escola</label>
-                <select onchange="go({fs:this.value})">
+              <div class="fp-field">
+                <label for="pt_fs">Unidade Escolar</label>
+                <select id="pt_fs" onchange="go({fs:this.value})">
                   <option value="">Todas as escolas (${D.schools.length})</option>
                   ${D.schools.map(sObj => `<option value="${sObj.id}" ${S.fs == sObj.id ? "selected" : ""}>${esc(sObj.name)}</option>`).join("")}
                 </select>
               </div>
-              <div class="pt-filter-group">
-                <label>Etapa</label>
-                <select onchange="go({fl:this.value})">
+              <div class="fp-field">
+                <label for="pt_fl">Etapa de Ensino</label>
+                <select id="pt_fl" onchange="go({fl:this.value})">
                   <option value="">Todas as etapas</option>
                   ${D.levels.map(lObj => `<option value="${lObj.id}" ${S.fl == lObj.id ? "selected" : ""}>${esc(lObj.name)}</option>`).join("")}
                 </select>
               </div>
-            </div>
-            <div class="pt-actions">
-              <a href="index.html" class="ghost" style="text-decoration:none">← Voltar ao Sistema</a>
-              <button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
             </div>
           </div>
         </div>
@@ -2070,16 +2188,13 @@
       root.innerHTML = toolbarHtml + `<div class="print-stage">${folha1}${folha2}</div>`;
     }
 
-    // Inicialização
     async function init() {
-      // Ler parâmetros da URL
       const params = new URLSearchParams(window.location.search);
       if (params.get("year")) S.curYear = params.get("year");
       if (params.get("fp")) S.fp = params.get("fp");
       if (params.get("fs")) S.fs = params.get("fs");
       if (params.get("fl")) S.fl = params.get("fl");
 
-      // Tentar carregar do cache local
       const cached = localStorage.getItem(CK);
       if (cached) {
         try {
@@ -2095,7 +2210,6 @@
         } catch (e) { console.error(e); }
       }
 
-      // Se não houver cache, buscar da API
       try {
         const resp = await fetch(API_URL, {
           method: "POST",
@@ -2113,7 +2227,7 @@
         }
       } catch (err) {
         document.getElementById("print-root").innerHTML = `
-          <div style="text-align:center;padding:50px;color:#b0003f">
+          <div style="text-align:center;padding:50px 20px;color:#b0003f">
             <h3>Não foi possível carregar os dados para impressão</h3>
             <p>Abra o sistema principal primeiro para autenticar ou atualizar os dados.</p>
             <a href="index.html" class="btn" style="text-decoration:none;display:inline-block;margin-top:14px">Ir para o Sistema</a>
