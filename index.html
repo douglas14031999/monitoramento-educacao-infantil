@@ -2005,8 +2005,15 @@ function aImpressao() {
     return { num: i + 1, id: n.id, text: n.text, x, sTot, simP, parcP, naoP };
   });
 
-  const fortes = [...indList].filter(item => item.sTot > 0).sort((a, b) => b.simP - a.simP).slice(0, 3);
-  const atencao = [...indList].filter(item => item.sTot > 0).sort((a, b) => a.simP - b.simP).slice(0, 3);
+  const avaliados = [...indList].filter(item => item.sTot > 0);
+  const fortes = avaliados.filter(item => item.simP >= 50).sort((a, b) => b.simP - a.simP).slice(0, 3);
+  const atencao = avaliados.filter(item => item.simP < 60 && !fortes.some(f => f.id === item.id)).sort((a, b) => a.simP - b.simP).slice(0, 3);
+  if (!fortes.length && avaliados.length) {
+    fortes.push(...[...avaliados].sort((a, b) => b.simP - a.simP).slice(0, 1));
+  }
+  if (!atencao.length && avaliados.length && avaliados.length > fortes.length) {
+    atencao.push(...[...avaliados].filter(i => !fortes.some(f => f.id === i.id)).sort((a, b) => a.simP - b.simP).slice(0, 1));
+  }
 
   const escolasTable = D.schools.map(sc => {
     const clEsc = cl.filter(c => c.sid == sc.id);
@@ -2035,9 +2042,10 @@ function aImpressao() {
       status: stCl.status,
       filled: stCl.filled,
       simPct: pct(q.t[0], sTot),
-      sTot
-    };
-  }).sort((a, b) => b.simPct - a.simPct);
+          sTot,
+          temDados: sTot > 0
+        };
+      }).sort((a, b) => b.simPct - a.simPct);
 
   const headerHtml = (pageNum, pageTotal) => `
     <div class="print-official-header">
@@ -2216,8 +2224,8 @@ function aImpressao() {
                   <td>${esc(t.etapa)}</td>
                   <td>${t.alunos}</td>
                   <td><span class="ptag ${tagClass}">${tagLabel}</span></td>
-                  <td><b>${t.temDados ? t.simPct + "%" : "-"}</b></td>
-                  <td>${t.temDados ? (t.simPct >= 70 ? '<span class="ptag s">Adequado</span>' : (t.simPct >= 50 ? '<span class="ptag w">Atenção</span>' : '<span class="ptag x">Prioritário</span>')) : '<span style="color:#888">-</span>'}</td>
+                  <td><b>${(t.sTot > 0) ? t.simPct + "%" : "-"}</b></td>
+                  <td>${(t.sTot > 0) ? (t.simPct >= 70 ? '<span class="ptag s">Adequado</span>' : (t.simPct >= 50 ? '<span class="ptag w">Atenção</span>' : '<span class="ptag x">Prioritário</span>')) : '<span style="color:#888">-</span>'}</td>
                 </tr>`;
               }).join("") || '<tr><td colspan="6" style="text-align:center;padding:8px">Nenhuma turma cadastrada.</td></tr>'
             ) : (
