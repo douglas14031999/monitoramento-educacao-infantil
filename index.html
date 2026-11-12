@@ -2811,32 +2811,36 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
           </button>
         </div>
 
-        <!-- Painel de Destaque da Turma e Controle de Alunos -->
-        <div class="card" style="margin-bottom:16px;padding:18px 20px;border-radius:12px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
-            <div style="flex:1;min-width:260px">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                <!-- Painel de Destaque da Turma e Controle de Alunos -->
+        <div class="card" style="margin-bottom:16px;padding:20px;border-radius:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                 <h2 style="margin:0;font-size:1.35rem;font-weight:700;color:var(--navy)">${esc(c.name)} · ${esc(lname(c.lid))}</h2>
                 <span class="badge" style="margin:0;background:var(--gs);color:var(--gd);font-weight:600">${esc(per(S.pid)?.name || "")}</span>
               </div>
-              <p style="margin:0 0 10px;font-size:.88rem;color:var(--mut)">${esc(s.name)} · Acompanhamento de Desenvolvimento e Aprendizagem</p>
-              <div id="prog-badge-wrap">${progMsg}</div>
+              <p style="margin:4px 0 0;font-size:.88rem;color:var(--mut)">${esc(s.name)} · Acompanhamento de Desenvolvimento e Aprendizagem</p>
             </div>
+            <div id="prog-badge-wrap">${progMsg}</div>
+          </div>
 
-            <!-- Controle do número de alunos na turma no período -->
-            <div style="background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:12px 16px;min-width:240px;box-shadow:inset 0 1px 2px rgba(0,0,0,.02)">
-              <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:6px">
+          <!-- Controle do número de alunos na turma no período -->
+          <div style="background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+            <div style="flex:1;min-width:240px">
+              <div style="font-weight:700;font-size:.85rem;color:var(--navy);display:flex;align-items:center;gap:6px">
+                <svg style="width:16px;height:16px;color:var(--g);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Alunos matriculados no período
               </div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                <button type="button" class="ghost" style="width:34px;height:34px;padding:0;font-size:1.2rem;font-weight:700;border-radius:6px;background:var(--sf)" onclick="alterarTotalAlunos(-1)" title="Diminuir 1 aluno">−</button>
-                <input id="turma_total" type="number" min="1" max="999" value="${c.total || 0}" style="width:72px;height:34px;text-align:center;font-weight:700;font-size:1.15rem;border-radius:6px;border:1px solid var(--ln);background:var(--sf);color:var(--ink)" oninput="onTotalAlunosInput(this.value)">
-                <button type="button" class="ghost" style="width:34px;height:34px;padding:0;font-size:1.2rem;font-weight:700;border-radius:6px;background:var(--sf)" onclick="alterarTotalAlunos(1)" title="Adicionar 1 aluno">+</button>
-                <span style="font-weight:600;font-size:.92rem;color:var(--ink)">alunos</span>
-              </div>
-              <div style="font-size:.76rem;color:var(--mut);line-height:1.25">
-                Caso a turma tenha aumentado ou diminuído neste período, ajuste acima. As somas serão recalculadas automaticamente.
-              </div>
+              <p style="margin:3px 0 0;font-size:.78rem;color:var(--mut);line-height:1.3">
+                Caso o número de alunos desta turma tenha mudado neste período, ajuste a quantidade ao lado.
+              </p>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;background:var(--sf);border:1px solid var(--ln);padding:4px 10px;border-radius:8px">
+              <button type="button" class="ghost" style="width:30px;height:30px;padding:0;font-size:1.1rem;font-weight:700;border-radius:6px;border:1px solid var(--ln);display:flex;align-items:center;justify-content:center" onclick="alterarTotalAlunos(-1)" title="Diminuir 1 aluno">−</button>
+              <input id="turma_total" type="number" min="1" max="999" value="${c.total || 0}" style="width:62px;height:32px;text-align:center;font-weight:700;font-size:1.15rem;border:0;background:transparent;color:var(--ink)" oninput="onTotalAlunosInput(this.value)">
+              <button type="button" class="ghost" style="width:30px;height:30px;padding:0;font-size:1.1rem;font-weight:700;border-radius:6px;border:1px solid var(--ln);display:flex;align-items:center;justify-content:center" onclick="alterarTotalAlunos(1)" title="Adicionar 1 aluno">+</button>
+              <span style="font-weight:600;font-size:.85rem;color:var(--mut);margin-left:2px">alunos</span>
             </div>
           </div>
         </div>
@@ -2908,7 +2912,10 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       const vA = inpA.value.trim();
       const vB = inpB.value.trim();
       const vC = inpC.value.trim();
-      const hasInput = (vA !== "" || vB !== "" || vC !== "");
+      
+      const allThreeFilled = (vA !== "" && vB !== "" && vC !== "");
+      const anyFilled = (vA !== "" || vB !== "" || vC !== "");
+      
       const a = Math.max(0, parseInt(vA) || 0);
       const b = Math.max(0, parseInt(vB) || 0);
       const c = Math.max(0, parseInt(vC) || 0);
@@ -2921,21 +2928,28 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       const alertEl = document.getElementById("alert_" + id);
       const badgeEl = document.getElementById("badge_" + id);
 
-      if (!hasInput && sum === 0) {
+      // Se nenhum campo foi preenchido ainda
+      if (!anyFilled && sum === 0) {
         if (badgeEl) badgeEl.innerHTML = '<span class="badge" style="margin:0;background:var(--ln);color:var(--mut);font-size:.74rem">Pendente</span>';
         if (alertEl) alertEl.innerHTML = '';
         return { ok: false, touched: false, sum, total };
       }
 
+      // Se nem todos os 3 campos foram preenchidos ainda: NÃO exibe alerta
+      if (!allThreeFilled) {
+        if (badgeEl) badgeEl.innerHTML = '<span class="badge w" style="margin:0;font-size:.74rem">● Preenchendo...</span>';
+        if (alertEl) alertEl.innerHTML = '';
+        return { ok: false, touched: true, sum, total };
+      }
+
+      // Quando os 3 campos foram inseridos:
       if (total > 0 && sum === total) {
+        // Soma correta: não exibe barra de notificação abaixo do item
         if (badgeEl) badgeEl.innerHTML = `<span class="badge" style="margin:0;background:var(--gs);color:var(--gd);font-size:.74rem">✓ ${sum}/${total} alunos</span>`;
-        if (alertEl) alertEl.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;background:var(--gs);color:var(--gd);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(47,125,91,0.25)">
-            <svg style="width:15px;height:15px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            <span>Soma correta: todos os <b>${total}</b> alunos distribuídos.</span>
-          </div>`;
+        if (alertEl) alertEl.innerHTML = '';
         return { ok: true, touched: true, sum, total };
       } else {
+        // Só exibe notificação se estiver faltando ou passando
         if (total > 0 && sum < total) {
           const faltam = total - sum;
           if (badgeEl) badgeEl.innerHTML = `<span class="badge w" style="margin:0;font-size:.74rem">⚠️ ${sum}/${total} alunos</span>`;
@@ -2950,7 +2964,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
           if (alertEl) alertEl.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;background:var(--ps);color:var(--p);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(232,0,95,0.25)">
               <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span>A soma informada é <b>${sum}</b> e ultrapassou o total da turma de <b>${total} alunos</b> (+<b>${excedeu}</b> excedente).</span>
+              <span>A soma informada é <b>${sum}</b> e ultrapassou o total da turma de <b>${total} alunos</b> (+<b>${excedeu}</b> a mais).</span>
             </div>`;
         }
         return { ok: false, touched: true, sum, total };
@@ -2999,12 +3013,37 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
         const inp0 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="0"]`);
         const inp1 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="1"]`);
         const inp2 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="2"]`);
-        const hasVal = (inp0 && inp0.value.trim() !== "") ||
-                       (inp1 && inp1.value.trim() !== "") ||
-                       (inp2 && inp2.value.trim() !== "");
-        if (hasVal || sum > 0) {
-          if (sum !== c.total) {
-            badItems.push({ idx: i + 1, id: n.id, sum, total: c.total });
+        const v0 = inp0 ? inp0.value.trim() : "";
+        const v1 = inp1 ? inp1.value.trim() : "";
+        const v2 = inp2 ? inp2.value.trim() : "";
+        const hasVal = (v0 !== "" || v1 !== "" || v2 !== "");
+        const allFilled = (v0 !== "" && v1 !== "" && v2 !== "");
+
+        if (hasVal) {
+          if (!allFilled || sum !== c.total) {
+            badItems.push({ idx: i + 1, id: n.id, sum, total: c.total, allFilled });
+            const alertEl = document.getElementById("alert_" + n.id);
+            if (alertEl) {
+              if (!allFilled) {
+                alertEl.innerHTML = `
+                  <div style="display:flex;align-items:center;gap:8px;background:var(--os);color:var(--o);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(244,123,32,0.25)">
+                    <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>Preencha os três campos (Sim, Parcial e Não) totalizando <b>${c.total} alunos</b>.</span>
+                  </div>`;
+              } else if (sum < c.total) {
+                alertEl.innerHTML = `
+                  <div style="display:flex;align-items:center;gap:8px;background:var(--os);color:var(--o);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(244,123,32,0.25)">
+                    <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span>A soma informada é <b>${sum}</b>. Para completar a turma de <b>${c.total} alunos</b>, faltam <b>${c.total - sum}</b> aluno(s).</span>
+                  </div>`;
+              } else {
+                alertEl.innerHTML = `
+                  <div style="display:flex;align-items:center;gap:8px;background:var(--ps);color:var(--p);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(232,0,95,0.25)">
+                    <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>A soma informada é <b>${sum}</b> e ultrapassou o total da turma de <b>${c.total} alunos</b> (+<b>${sum - c.total}</b> a mais).</span>
+                  </div>`;
+              }
+            }
           }
         }
       });
