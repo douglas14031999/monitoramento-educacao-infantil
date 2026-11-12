@@ -1583,6 +1583,11 @@
         margin: 8mm 10mm 8mm 10mm;
       }
 
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
       body, html {
         background: #ffffff !important;
         color: #000000 !important;
@@ -1778,7 +1783,7 @@
         <div class="print-official-header">
           <div class="poh-row">
             <div class="poh-logo">
-              <img src="logo.png" alt="Lagoa da Canoa">
+              <img src="logo.png" alt="Lagoa da Canoa" onerror="this.onerror=null;this.src='favicon.png'">
             </div>
             <div class="poh-divider"></div>
             <div class="poh-text">
