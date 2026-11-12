@@ -1702,6 +1702,7 @@
     let D = vazio(), TOK = "", chain = Promise.resolve(), pend = 0, needSync = false;
     let autoTimer = null, autoBusy = false;
     let S = S0();
+    let currentSessionId = 1;
 
     try {
       TOK = localStorage.getItem(TK) || "";
@@ -1807,19 +1808,48 @@
       }
     }
     function entrar(r) {
-      $("#msg").innerHTML = ""; S = S0(); adopt(r);
+      currentSessionId++;
+      $("#msg").innerHTML = "";
+      S = S0();
+      S.user = r.role == "admin" ? { role: "admin" } : { role: "coord", name: r.name, sids: (r.data?.schools || []).map(s => s.id) };
+      adopt(r);
       if (S.user.role == "admin") go({ yr: D.cur, fp: "" });
       else { const s = S.user.sids; go({ sid: s.length == 1 ? s[0] : null, pid: openP()[0]?.id || null }) }
-      iniciarAuto()
+      iniciarAuto();
     }
     function reset(msg) {
-      pararAuto(); setTok(""); try { localStorage.removeItem(CK); localStorage.removeItem(CR) } catch (e) { } D = vazio(); S = S0(); $("#cpf").value = ""; $("#pw").value = ""; $("#pwbox").hidden = true;
-      $("#msg").innerHTML = msg ? `<div class="err">${esc(msg)}</div>` : ""; render()
+      currentSessionId++;
+      pararAuto();
+      const t = TOK;
+      setTok("");
+      try {
+        localStorage.removeItem(CK);
+        localStorage.removeItem(CR);
+        localStorage.removeItem(TK);
+        sessionStorage.clear();
+      } catch (e) { }
+      D = vazio();
+      S = S0();
+      const cpfEl = $("#cpf"), pwEl = $("#pw"), pwBox = $("#pwbox"), msgEl = $("#msg");
+      if (cpfEl) cpfEl.value = "";
+      if (pwEl) pwEl.value = "";
+      if (pwBox) pwBox.hidden = true;
+      if (msgEl) msgEl.innerHTML = msg ? `<div class="err">${esc(msg)}</div>` : "";
+      render();
+      if (t) {
+        api({ a: "logout", token: t }).catch(() => { });
+      }
     }
     const expirou = m => reset(m || "Sessão expirada. Entre novamente.");
     async function recarregar(quiet) {
+      if (!TOK || !S.user) return false;
+      const sess = currentSessionId;
       if (!quiet) { const ico = $("#rf-ico"); if (ico) ico.classList.add("spin") }
       const r = await api({ a: "load", token: TOK });
+      if (sess !== currentSessionId || !TOK || !S.user) {
+        const ico = $("#rf-ico"); if (ico) ico.classList.remove("spin");
+        return false;
+      }
       const ico = $("#rf-ico"); if (ico && !quiet && !autoBusy) ico.classList.remove("spin");
       if (!r.ok) {
         if (r.code == "auth") {
@@ -1829,15 +1859,17 @@
               const cred = JSON.parse(credStr);
               if (cred && cred.cpf) {
                 const relog = await api({ a: "login", cpf: cred.cpf, pass: cred.pass });
+                if (sess !== currentSessionId || !TOK || !S.user) return false;
                 if (relog.ok) { setTok(relog.token); return await recarregar(quiet) }
               }
             } catch (e) { }
           }
-          expirou(r.err);
+          if (sess === currentSessionId && TOK) expirou(r.err);
         } else if (!quiet) alert(r.err || "Não foi possível atualizar.");
-        return false
+        return false;
       }
-      adopt(r); render(); return true
+      if (sess !== currentSessionId || !TOK || !S.user) return false;
+      adopt(r); render(); return true;
     }
     async function carregarExemplo(btn) {
       if (btn) { btn.disabled = true; btn.textContent = "Gravando dados na planilha…" }
@@ -1846,6 +1878,7 @@
       else { alert(r.err || "Erro ao carregar dados de exemplo."); if (btn) { btn.disabled = false; btn.textContent = "⚡ Inserir dados de teste na planilha" } }
     }
     async function restaurar() {
+      const sess = currentSessionId;
       const b = $("#go");
       if (!TOK) {
         const credStr = localStorage.getItem(CR);
@@ -1853,19 +1886,21 @@
           try {
             const cred = JSON.parse(credStr);
             if (cred && cred.cpf) {
-              if (b) { b.disabled = true; b.textContent = "Conectando…" }
+              if (b) { b.disabled = true; b.textContent = "Conectando…"; }
               const relog = await api({ a: "login", cpf: cred.cpf, pass: cred.pass });
-              if (b) { b.disabled = false; b.textContent = "Entrar" }
-              if (relog.ok) { setTok(relog.token); entrar(relog); return }
+              if (b) { b.disabled = false; b.textContent = "Entrar"; }
+              if (sess !== currentSessionId) return;
+              if (relog.ok) { setTok(relog.token); entrar(relog); return; }
             }
           } catch (e) { }
         }
         return;
       }
-      if (b && !S.user) { b.disabled = true; b.textContent = "Verificando…" }
+      if (b && !S.user) { b.disabled = true; b.textContent = "Verificando…"; }
       const r = await api({ a: "load", token: TOK });
-      if (b) { b.disabled = false; b.textContent = "Entrar" }
-      if (r.ok) { entrar(r) }
+      if (b) { b.disabled = false; b.textContent = "Entrar"; }
+      if (sess !== currentSessionId || !TOK) return;
+      if (r.ok) { entrar(r); }
       else if (r.code == "auth") {
         const credStr = localStorage.getItem(CR);
         if (credStr) {
@@ -1873,7 +1908,8 @@
             const cred = JSON.parse(credStr);
             if (cred && cred.cpf) {
               const relog = await api({ a: "login", cpf: cred.cpf, pass: cred.pass });
-              if (relog.ok) { setTok(relog.token); entrar(relog); return }
+              if (sess !== currentSessionId) return;
+              if (relog.ok) { setTok(relog.token); entrar(relog); return; }
             }
           } catch (e) { }
         }
@@ -1901,7 +1937,7 @@
     const yname = id => D.years.find(y => y.id == id)?.name || "—", yr = () => D.years.some(y => y.id == S.yr) ? S.yr : D.cur, yCl = y => D.classes.filter(c => c.yid == y), yPer = y => D.periods.filter(p => p.yid == y);
     const openP = () => D.periods.filter(p => p.open && p.yid == D.cur);
     $("#cpf").oninput = e => { e.target.value = mask(e.target.value); $("#pwbox").hidden = true }; $("#cpf").onkeydown = e => { if (e.key == "Enter") login() }; $("#pw").onkeydown = e => { if (e.key == "Enter") login() }; $("#go").onclick = login;
-    $("#out").onclick = async () => { pararAuto(); const t = TOK; setTok(""); try { localStorage.removeItem(CK); localStorage.removeItem(CR) } catch (e) { } await chain; if (t) api({ a: "logout", token: t }); reset("") };
+    $("#out").onclick = () => { reset(""); };
     $("#rf").onclick = async () => { const b = $("#rf"), ico = $("#rf-ico"); b.disabled = true; if (ico) ico.classList.add("spin"); await chain; await recarregar(); b.disabled = false; if (ico) ico.classList.remove("spin") };
     async function login() {
       const c = $("#cpf").value.replace(/\D/g, ""), m = t => $("#msg").innerHTML = `<div class="err">${esc(t)}</div>`, b = $("#go");
