@@ -2790,24 +2790,252 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
               ? `<span class="badge w">● Parcial (${stCl.filled}/${stCl.total})</span>`
               : '<span class="badge x">Pendente</span>');
           return `<button class="item" onclick="go({cid:'${c.id}'})"><h4>${esc(c.name)}</h4><small>${esc(lname(c.lid))} · ${c.total || "-"} alunos</small><br>${badgeHtml}</button>` }).join("") || '<p class="empty">Nenhuma turma criada. Procure a Secretaria.</p>'}</div>` }
-      const c = D.classes.find(x => x.id == S.cid), r = (D.rec[c.id] || {})[S.pid] || {};
+            const c = D.classes.find(x => x.id == S.cid), r = (D.rec[c.id] || {})[S.pid] || {};
       const stCl = classStatus(c.id, S.pid);
       const progMsg = stCl.status == "completa"
-        ? '<span class="badge">✓ Todos os ' + stCl.total + ' critérios preenchidos</span>'
+        ? '<span class="badge" style="margin:0;background:var(--gs);color:var(--gd)">✓ Todos os ' + stCl.total + ' critérios preenchidos</span>'
         : (stCl.status == "parcial"
-          ? '<span class="badge w">● Preenchimento parcial: ' + stCl.filled + ' de ' + stCl.total + ' critérios preenchidos</span>'
-          : '<span class="badge x">Pendente: nenhum critério preenchido ainda</span>');
-      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button><button class="ghost" style="height:34px;font-size:.82rem" onclick="window.open('impressao.html?year=' + D.cur + '&fs=' + S.sid + '&fp=' + (S.pid || ''), '_blank')"><svg style="width:14px;height:14px;margin-right:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>Imprimir relatório</button></div><div class="hello"><h2>${esc(c.name)} · ${esc(lname(c.lid))}</h2><p>${esc(s.name)} · ${esc(per(S.pid)?.name || "")} · ${c.total || "-"} alunos. Informe, em cada critério, quantos alunos se enquadram em cada resposta.</p><div style="margin-top:6px">${progMsg}</div></div>` + `<div class="card">${D.inds.map((n, i) => { const x = r[n.id] || ["", "", ""]; return `<div class="ind"><span class="num">${i + 1}</span><b style="font-weight:600">${esc(n.text)}</b><div class="ins"><div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}"></div><div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}"></div><div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}"></div></div></div>` }).join("")}<div id="fe"></div><button class="btn" id="sf" onclick="saveForm()">Salvar preenchimento</button><span class="ok" id="fo"></span></div>`
+          ? '<span class="badge w" style="margin:0">● Preenchimento parcial: ' + stCl.filled + ' de ' + stCl.total + ' critérios preenchidos</span>'
+          : '<span class="badge x" style="margin:0">Pendente: nenhum critério preenchido ainda</span>');
+
+      setTimeout(atualizarProgressoGeral, 20);
+
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <button class="crumb" onclick="go({cid:null})">← Voltar às turmas</button>
+          <button class="ghost" style="height:34px;font-size:.82rem" onclick="window.open('impressao.html?year=' + D.cur + '&fs=' + S.sid + '&fp=' + (S.pid || ''), '_blank')">
+            <svg style="width:14px;height:14px;margin-right:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimir relatório
+          </button>
+        </div>
+
+        <!-- Painel de Destaque da Turma e Controle de Alunos -->
+        <div class="card" style="margin-bottom:16px;padding:18px 20px;border-radius:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+            <div style="flex:1;min-width:260px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                <h2 style="margin:0;font-size:1.35rem;font-weight:700;color:var(--navy)">${esc(c.name)} · ${esc(lname(c.lid))}</h2>
+                <span class="badge" style="margin:0;background:var(--gs);color:var(--gd);font-weight:600">${esc(per(S.pid)?.name || "")}</span>
+              </div>
+              <p style="margin:0 0 10px;font-size:.88rem;color:var(--mut)">${esc(s.name)} · Acompanhamento de Desenvolvimento e Aprendizagem</p>
+              <div id="prog-badge-wrap">${progMsg}</div>
+            </div>
+
+            <!-- Controle do número de alunos na turma no período -->
+            <div style="background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:12px 16px;min-width:240px;box-shadow:inset 0 1px 2px rgba(0,0,0,.02)">
+              <div style="font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:6px">
+                Alunos matriculados no período
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <button type="button" class="ghost" style="width:34px;height:34px;padding:0;font-size:1.2rem;font-weight:700;border-radius:6px;background:var(--sf)" onclick="alterarTotalAlunos(-1)" title="Diminuir 1 aluno">−</button>
+                <input id="turma_total" type="number" min="1" max="999" value="${c.total || 0}" style="width:72px;height:34px;text-align:center;font-weight:700;font-size:1.15rem;border-radius:6px;border:1px solid var(--ln);background:var(--sf);color:var(--ink)" oninput="onTotalAlunosInput(this.value)">
+                <button type="button" class="ghost" style="width:34px;height:34px;padding:0;font-size:1.2rem;font-weight:700;border-radius:6px;background:var(--sf)" onclick="alterarTotalAlunos(1)" title="Adicionar 1 aluno">+</button>
+                <span style="font-weight:600;font-size:.92rem;color:var(--ink)">alunos</span>
+              </div>
+              <div style="font-size:.76rem;color:var(--mut);line-height:1.25">
+                Caso a turma tenha aumentado ou diminuído neste período, ajuste acima. As somas serão recalculadas automaticamente.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cartão dos Critérios com Validação por Item -->
+        <div class="card">
+          <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--ln)">
+            <h3 style="margin:0 0 4px;font-size:1.05rem;color:var(--navy)">Critérios de Avaliação</h3>
+            <p style="margin:0;font-size:.84rem;color:var(--mut)">Distribua os alunos entre <b>Sim</b>, <b>Parcial</b> e <b>Não</b>. A soma das respostas de cada critério deve conferir com o total de alunos da turma.</p>
+          </div>
+
+          ${D.inds.map((n, i) => {
+            const x = r[n.id] || ["", "", ""];
+            return `
+              <div class="ind" id="ind_card_${n.id}">
+                <span class="num">${i + 1}</span>
+                <div style="grid-column: 2">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">
+                    <b style="font-weight:600;font-size:.92rem;line-height:1.35;color:var(--ink)">${esc(n.text)}</b>
+                    <div id="badge_${n.id}"></div>
+                  </div>
+                  <div class="ins" style="grid-column:unset;max-width:440px">
+                    <div class="a"><label>Sim</label><input type="number" min="0" data-i="${n.id}" data-j="0" value="${x[0]}" oninput="onIndInput('${n.id}')"></div>
+                    <div class="b"><label>Parcial</label><input type="number" min="0" data-i="${n.id}" data-j="1" value="${x[1]}" oninput="onIndInput('${n.id}')"></div>
+                    <div class="c"><label>Não</label><input type="number" min="0" data-i="${n.id}" data-j="2" value="${x[2]}" oninput="onIndInput('${n.id}')"></div>
+                  </div>
+                  <div id="alert_${n.id}" class="ind-alert" style="margin-top:8px"></div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+
+          <div id="fe" style="margin-top:16px"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn" id="sf" onclick="saveForm()" style="min-width:180px">Salvar preenchimento</button>
+            <span class="ok" id="fo"></span>
+          </div>
+        </div>
+      `;
     }
+
+    function alterarTotalAlunos(delta) {
+      const inp = document.getElementById("turma_total");
+      if (!inp) return;
+      const cur = Math.max(1, (parseInt(inp.value) || 0) + delta);
+      inp.value = cur;
+      onTotalAlunosInput(cur);
+    }
+
+    function onTotalAlunosInput(val) {
+      const total = Math.max(0, parseInt(val) || 0);
+      const c = D.classes.find(x => x.id == S.cid);
+      if (c) c.total = total;
+      D.inds.forEach(n => checkInd(n.id));
+      atualizarProgressoGeral();
+    }
+
+    function onIndInput(id) {
+      checkInd(id);
+      atualizarProgressoGeral();
+    }
+
+    function checkInd(id) {
+      const inpA = document.querySelector(`.ins input[data-i="${id}"][data-j="0"]`);
+      const inpB = document.querySelector(`.ins input[data-i="${id}"][data-j="1"]`);
+      const inpC = document.querySelector(`.ins input[data-i="${id}"][data-j="2"]`);
+      if (!inpA || !inpB || !inpC) return null;
+
+      const vA = inpA.value.trim();
+      const vB = inpB.value.trim();
+      const vC = inpC.value.trim();
+      const hasInput = (vA !== "" || vB !== "" || vC !== "");
+      const a = Math.max(0, parseInt(vA) || 0);
+      const b = Math.max(0, parseInt(vB) || 0);
+      const c = Math.max(0, parseInt(vC) || 0);
+      const sum = a + b + c;
+
+      const totalInp = document.getElementById("turma_total");
+      const cObj = D.classes.find(x => x.id == S.cid);
+      const total = totalInp ? (Math.max(0, parseInt(totalInp.value) || 0)) : (cObj ? cObj.total : 0);
+
+      const alertEl = document.getElementById("alert_" + id);
+      const badgeEl = document.getElementById("badge_" + id);
+
+      if (!hasInput && sum === 0) {
+        if (badgeEl) badgeEl.innerHTML = '<span class="badge" style="margin:0;background:var(--ln);color:var(--mut);font-size:.74rem">Pendente</span>';
+        if (alertEl) alertEl.innerHTML = '';
+        return { ok: false, touched: false, sum, total };
+      }
+
+      if (total > 0 && sum === total) {
+        if (badgeEl) badgeEl.innerHTML = `<span class="badge" style="margin:0;background:var(--gs);color:var(--gd);font-size:.74rem">✓ ${sum}/${total} alunos</span>`;
+        if (alertEl) alertEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;background:var(--gs);color:var(--gd);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(47,125,91,0.25)">
+            <svg style="width:15px;height:15px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Soma correta: todos os <b>${total}</b> alunos distribuídos.</span>
+          </div>`;
+        return { ok: true, touched: true, sum, total };
+      } else {
+        if (total > 0 && sum < total) {
+          const faltam = total - sum;
+          if (badgeEl) badgeEl.innerHTML = `<span class="badge w" style="margin:0;font-size:.74rem">⚠️ ${sum}/${total} alunos</span>`;
+          if (alertEl) alertEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;background:var(--os);color:var(--o);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(244,123,32,0.25)">
+              <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span>A soma informada é <b>${sum}</b>. Para completar a turma de <b>${total} alunos</b>, faltam <b>${faltam}</b> aluno(s).</span>
+            </div>`;
+        } else {
+          const excedeu = sum - total;
+          if (badgeEl) badgeEl.innerHTML = `<span class="badge x" style="margin:0;font-size:.74rem">✕ ${sum}/${total} alunos</span>`;
+          if (alertEl) alertEl.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;background:var(--ps);color:var(--p);padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:600;border:1px solid rgba(232,0,95,0.25)">
+              <svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>A soma informada é <b>${sum}</b> e ultrapassou o total da turma de <b>${total} alunos</b> (+<b>${excedeu}</b> excedente).</span>
+            </div>`;
+        }
+        return { ok: false, touched: true, sum, total };
+      }
+    }
+
+    function atualizarProgressoGeral() {
+      const badgeWrap = document.getElementById("prog-badge-wrap");
+      if (!badgeWrap) return;
+      const c = D.classes.find(x => x.id == S.cid);
+      if (!c) return;
+
+      let validos = 0, preenchidos = 0;
+      D.inds.forEach(n => {
+        const res = checkInd(n.id);
+        if (res && res.touched) preenchidos++;
+        if (res && res.ok) validos++;
+      });
+
+      const totalInds = D.inds.length;
+      if (validos === totalInds && totalInds > 0) {
+        badgeWrap.innerHTML = `<span class="badge" style="margin:0;background:var(--gs);color:var(--gd)">✓ Todos os ${totalInds} critérios preenchidos corretamente</span>`;
+      } else if (preenchidos > 0) {
+        badgeWrap.innerHTML = `<span class="badge w" style="margin:0">● Em andamento: ${validos} de ${totalInds} critérios conferidos</span>`;
+      } else {
+        badgeWrap.innerHTML = `<span class="badge x" style="margin:0">Pendente: nenhum critério preenchido ainda</span>`;
+      }
+    }
+
     async function saveForm() {
-      const r = {}; D.inds.forEach(i => r[i.id] = [0, 0, 0]); document.querySelectorAll(".ins input").forEach(e => r[e.dataset.i][e.dataset.j] = Math.max(0, +e.value || 0));
-      const cid = S.cid, pid = S.pid, c = D.classes.find(x => x.id == cid), bad = c.total ? D.inds.map((n, i) => r[n.id].reduce((a, b) => a + b) > c.total ? i + 1 : 0).filter(Boolean) : [];
-      if (bad.length) { $("#fo").textContent = ""; $("#fe").innerHTML = `<div class="err" style="margin:0 0 14px">A soma passa do total de ${c.total} alunos nos critérios: ${bad.join(", ")}.</div>`; return }
-      const b = $("#sf"); b.disabled = true; $("#fe").innerHTML = ""; $("#fo").textContent = "Salvando…";
-      const res = await commit([{ t: "rec", cid, pid, r }], true);
+      const cid = S.cid, pid = S.pid, c = D.classes.find(x => x.id == cid);
+      if (!c) return;
+
+      const totalInp = document.getElementById("turma_total");
+      const newTotal = totalInp ? Math.max(1, parseInt(totalInp.value) || 0) : c.total;
+      const totalMudou = (c.total !== newTotal);
+      c.total = newTotal;
+
+      const r = {};
+      D.inds.forEach(i => r[i.id] = [0, 0, 0]);
+      document.querySelectorAll(".ins input").forEach(e => r[e.dataset.i][e.dataset.j] = Math.max(0, +e.value || 0));
+
+      const badItems = [];
+      D.inds.forEach((n, i) => {
+        const sum = r[n.id].reduce((a, b) => a + b, 0);
+        const inp0 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="0"]`);
+        const inp1 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="1"]`);
+        const inp2 = document.querySelector(`.ins input[data-i="${n.id}"][data-j="2"]`);
+        const hasVal = (inp0 && inp0.value.trim() !== "") ||
+                       (inp1 && inp1.value.trim() !== "") ||
+                       (inp2 && inp2.value.trim() !== "");
+        if (hasVal || sum > 0) {
+          if (sum !== c.total) {
+            badItems.push({ idx: i + 1, id: n.id, sum, total: c.total });
+          }
+        }
+      });
+
+      if (badItems.length > 0) {
+        $("#fo").textContent = "";
+        $("#fe").innerHTML = `
+          <div class="err" style="margin:0 0 14px">
+            <b>Atenção:</b> A soma dos alunos não confere com o total da turma (${c.total} alunos) no(s) critério(s): <b>${badItems.map(b => b.idx).join(", ")}</b>.<br>
+            Verifique os alertas exibidos abaixo de cada item destacado antes de salvar.
+          </div>`;
+        const firstErrEl = document.getElementById("ind_card_" + badItems[0].id);
+        if (firstErrEl) firstErrEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const b = $("#sf");
+      b.disabled = true;
+      $("#fe").innerHTML = "";
+      $("#fo").textContent = "Salvando…";
+
+      const ops = [{ t: "rec", cid, pid, r }];
+      if (totalMudou) {
+        ops.push(P("classes", c));
+      }
+
+      const res = await commit(ops, true);
       if (res.ok) (D.rec[cid] = D.rec[cid] || {})[pid] = r;
       if (!b.isConnected) return;
       b.disabled = false;
+
       if (res.ok) {
         const stCl = classStatus(cid, pid);
         $("#fe").innerHTML = "";
@@ -2818,8 +3046,11 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
         } else {
           $("#fo").textContent = "✓ Salvo com sucesso.";
         }
+        atualizarProgressoGeral();
+      } else {
+        $("#fo").textContent = "";
+        $("#fe").innerHTML = `<div class="err" style="margin:0 0 14px">${esc(res.err || "Não foi possível salvar. Tente novamente.")}</div>`;
       }
-      else { $("#fo").textContent = ""; $("#fe").innerHTML = `<div class="err" style="margin:0 0 14px">${esc(res.err || "Não foi possível salvar. Tente novamente.")}</div>` }
     }
     render(); if (S.user) iniciarAuto(); restaurar();
   </script>
