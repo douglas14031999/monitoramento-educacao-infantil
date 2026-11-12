@@ -1714,7 +1714,7 @@
             S.user = { role: "admin" };
             S.tab = "resumo";
             S.yr = D.cur;
-            S.fp = D.periods.filter(p => p.yid == D.cur)[0]?.id || "";
+            S.fp = "";
           } else if (r.role == "coord") {
             S.user = { role: "coord", name: r.name, sids: D.schools.map(s => s.id) };
             S.sid = S.user.sids.length == 1 ? S.user.sids[0] : null;
@@ -1808,7 +1808,7 @@
     }
     function entrar(r) {
       $("#msg").innerHTML = ""; S = S0(); adopt(r);
-      if (S.user.role == "admin") go({ yr: D.cur, fp: yPer(D.cur)[0]?.id || "" });
+      if (S.user.role == "admin") go({ yr: D.cur, fp: "" });
       else { const s = S.user.sids; go({ sid: s.length == 1 ? s[0] : null, pid: openP()[0]?.id || null }) }
       iniciarAuto()
     }
@@ -2692,7 +2692,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
       const o = k.cpf; k.name = n; k.cpf = c; k.sids = ids; commit(o == c ? [P("coords", k)] : [X("coords", o), P("coords", k, 1)]); go({ ed: null })
     }
     function yBar() { if (!["resumo", "turmas", "periodos"].includes(S.tab)) return ""; return `<div class="card yrbar"><label for="ysel">Ano letivo</label><select id="ysel" onchange="setYr(this.value)">${D.years.map(y => `<option value="${y.id}" ${y.id == yr() ? "selected" : ""}>${esc(y.name)}</option>`).join("")}</select>${yr() == D.cur ? '<span class="badge" style="margin:0">● Vigente</span>' : '<span class="badge w" style="margin:0">Não é o ano vigente</span>'}</div>` }
-    function setYr(id) { go({ yr: id, fp: yPer(id)[0]?.id || "", ed: null }) }
+    function setYr(id) { go({ yr: id, fp: "", ed: null }) }
     function setCur(id) { D.cur = id; commit([{ t: "cur", id }]); render() }
     function aAnos() {
       const nx = String((Math.max(0, ...D.years.map(y => parseInt(y.name) || 0)) || new Date().getFullYear() - 1) + 1);
@@ -2706,7 +2706,7 @@ const addBox = (t, f, b) => `<div class="card"><h3>${t}</h3>${f}<p style="margin
         if ($("#yc").checked) D.classes.filter(c => c.yid == f && sch(c.sid)).forEach(c => { const x = { id: uid(), yid: y.id, sid: c.sid, name: c.name, lid: c.lid, total: c.total }; D.classes.push(x); ops.push(P("classes", x, 1)) });
         if ($("#yp").checked) D.periods.filter(p => p.yid == f).forEach((p, i) => { const x = { id: uid(), yid: y.id, name: p.name, open: i == 0 }; D.periods.push(x); ops.push(P("periods", x, 1)) })
       }
-      if ($("#yv").checked) { D.cur = y.id; ops.push({ t: "cur", id: y.id }) } S.yr = y.id; S.fp = yPer(y.id)[0]?.id || ""; commit(ops); render()
+      if ($("#yv").checked) { D.cur = y.id; ops.push({ t: "cur", id: y.id }) } S.yr = y.id; S.fp = ""; commit(ops); render()
     }
     function addEtapa() { const n = val("le"); if (!n) return; if (D.levels.some(l => l.name.toLowerCase() == n.toLowerCase())) return alert("Já existe uma etapa com esse nome."); D.levels.push({ id: uid(), name: n }); commit(ordOps("levels")); render() }
     function mvL(i, d) { const j = i + d; if (j < 0 || j >= D.levels.length) return;[D.levels[i], D.levels[j]] = [D.levels[j], D.levels[i]]; commit(ordOps("levels")); render() }
